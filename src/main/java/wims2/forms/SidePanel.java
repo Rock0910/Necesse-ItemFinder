@@ -49,7 +49,9 @@ public class SidePanel extends Form {
             addComponent(x);
             x.onClicked(e -> hidePanel());
         } catch (Exception ignored) {}
-        flow.nextY(titleLabel, 5);
+        // Title text is shorter than the 36px close button; extra padding
+        // so the icon wall starts below the button, not under it.
+        flow.nextY(titleLabel, 16);
 
         box = new FormContentBox(5, 0, getWidth() - 10, 150);
         box.alwaysShowVerticalScrollBar = false;
