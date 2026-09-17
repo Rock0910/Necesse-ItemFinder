@@ -416,10 +416,30 @@ public class SearchForm extends Form {
     private static necesse.inventory.InventoryItem findHoveredSlot(Object comp) {
         if (comp == null) return null;
         try {
+            // Recipe result preview (crafting station outputs): not a real slot
+            if (comp instanceof necesse.gfx.forms.components.FormContainerRecipe) {
+                necesse.gfx.forms.components.FormContainerRecipe rc =
+                    (necesse.gfx.forms.components.FormContainerRecipe) comp;
+                try {
+                    if (rc.isHovering() && rc.recipe != null && rc.recipe.recipe != null
+                        && rc.recipe.recipe.resultItem != null) {
+                        return rc.recipe.recipe.resultItem;
+                    }
+                } catch (Exception ignored) {}
+                return null;
+            }
             if (comp instanceof necesse.gfx.forms.components.containerSlot.FormContainerSlot) {
                 necesse.gfx.forms.components.containerSlot.FormContainerSlot slot =
                     (necesse.gfx.forms.components.containerSlot.FormContainerSlot) comp;
                 if (slot.isHovering()) {
+                    // Ghost slots (fuel filters etc.): real item lives in ghostItem
+                    try {
+                        if (slot instanceof necesse.gfx.forms.components.containerSlot.FormContainerGhostItemSlot) {
+                            necesse.inventory.InventoryItem ghost =
+                                ((necesse.gfx.forms.components.containerSlot.FormContainerGhostItemSlot) slot).ghostItem;
+                            if (ghost != null) return ghost;
+                        }
+                    } catch (Exception ignored) {}
                     try {
                         necesse.inventory.container.slots.ContainerSlot cs = slot.getContainerSlot();
                         if (cs != null && !cs.isClear()) return cs.getItem();
