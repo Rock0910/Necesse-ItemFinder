@@ -399,6 +399,15 @@ public class SearchForm extends Form {
                 if (out.size() >= 10) return;
                 try {
                     counts[0]++;
+                    if (comp instanceof necesse.gfx.forms.components.lists.FormGeneralList) {
+                        necesse.inventory.InventoryItem item = listHoveredItem(comp);
+                        if (item != null) {
+                            String sid = "?";
+                            try { sid = item.item.getStringID(); } catch (Exception ignored) {}
+                            out.add("ListEl:" + sid);
+                        }
+                        return;
+                    }
                     if (comp instanceof necesse.gfx.forms.components.FormContainerRecipe
                         || comp instanceof necesse.gfx.forms.components.containerSlot.FormContainerSlot) {
                         boolean isRecipe = comp instanceof necesse.gfx.forms.components.FormContainerRecipe;
@@ -654,12 +663,76 @@ public class SearchForm extends Form {
         try {
             walkTree(root, new java.util.HashSet<Object>(), comp -> {
                 if (hit[0] != null) return;
+                // Recipe/ingredient list elements (settler workstation lists etc.)
+                if (comp instanceof necesse.gfx.forms.components.lists.FormGeneralList) {
+                    necesse.inventory.InventoryItem item = listHoveredItem(comp);
+                    if (item != null) hit[0] = item;
+                    return;
+                }
                 if (!hoverComp(comp)) return;
                 necesse.inventory.InventoryItem item = slotItem(comp);
                 if (item != null) hit[0] = item;
             });
         } catch (Exception ignored) {}
         return hit[0];
+    }
+
+    /** Hovered element of a FormGeneralList (recipe lists, ...). */
+    private static necesse.inventory.InventoryItem listHoveredItem(Object list) {
+        try {
+            for (Object el : listElements(list)) {
+                if (!(el instanceof necesse.gfx.forms.components.lists.FormListElement)) continue;
+                boolean hov = false;
+                try {
+                    hov = ((necesse.gfx.forms.components.lists.FormListElement) el).isHovering();
+                } catch (Exception ignored) {}
+                if (!hov) continue;
+                necesse.inventory.InventoryItem item = elementItem(el);
+                if (item != null) return item;
+            }
+        } catch (Exception ignored) {}
+        return null;
+    }
+
+    private static java.util.List<?> listElements(Object list) {
+        Class<?> c = list.getClass();
+        while (c != null) {
+            try {
+                java.lang.reflect.Field f = c.getDeclaredField("elements");
+                f.setAccessible(true);
+                Object v = f.get(list);
+                if (v instanceof java.util.List) return (java.util.List<?>) v;
+                return null;
+            } catch (NoSuchFieldException e) {
+                c = c.getSuperclass();
+            } catch (Exception e) {
+                return null;
+            }
+        }
+        return null;
+    }
+
+    private static necesse.inventory.InventoryItem elementItem(Object el) {
+        try {
+            Class<?> c = el.getClass();
+            java.lang.reflect.Field f = null;
+            while (c != null) {
+                try { f = c.getDeclaredField("recipe"); break; }
+                catch (NoSuchFieldException e) { c = c.getSuperclass(); }
+            }
+            if (f == null) return null;
+            f.setAccessible(true);
+            Object rv = f.get(el);
+            if (rv instanceof necesse.inventory.recipe.Recipe) {
+                return ((necesse.inventory.recipe.Recipe) rv).resultItem;
+            }
+            if (rv instanceof necesse.inventory.container.ContainerRecipe) {
+                necesse.inventory.container.ContainerRecipe cr =
+                    (necesse.inventory.container.ContainerRecipe) rv;
+                return cr.recipe != null ? cr.recipe.resultItem : null;
+            }
+        } catch (Exception ignored) {}
+        return null;
     }
 
     private static ItemIconButton findHoveredIcon(FormContentBox box) {
