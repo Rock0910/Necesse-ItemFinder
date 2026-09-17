@@ -412,6 +412,8 @@ public class SearchForm extends Form {
         } catch (Exception ignored) {}
         return roots;
     }
+
+    private static necesse.inventory.InventoryItem findHoveredSlot(Object comp) {
         if (comp == null) return null;
         try {
             if (comp instanceof necesse.gfx.forms.components.containerSlot.FormContainerSlot) {
