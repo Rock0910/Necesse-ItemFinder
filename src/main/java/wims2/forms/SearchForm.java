@@ -355,7 +355,7 @@ public class SearchForm extends Form {
                     java.util.ArrayList<Object> dbg = vanillaRoots(fm);
                     StringBuilder sb = new StringBuilder("ItemFinder: U-fav found nothing, roots=");
                     sb.append(dbg.size()).append(" [");
-                    for (int i = 0; i < Math.min(12, dbg.size()); i++) {
+                    for (int i = 0; i < dbg.size(); i++) {
                         if (i > 0) sb.append(',');
                         sb.append(dbg.get(i).getClass().getSimpleName());
                     }
