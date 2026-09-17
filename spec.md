@@ -1,4 +1,4 @@
-# Spec: WIMS2 — 分類篩選式全圖找物 Mod（Necesse 1.3）
+# Spec: ItemFinder — 分類篩選式全圖找物 Mod（Necesse 1.3）
 
 ## Objective
 重寫類似 Where Is My Stuff?? (W.I.M.S.) 的客戶端找物 Mod，但 UI 改為：
