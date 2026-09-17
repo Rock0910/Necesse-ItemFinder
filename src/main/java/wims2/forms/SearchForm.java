@@ -381,6 +381,24 @@ public class SearchForm extends Form {
                         if (i > 0) sb.append(',');
                         Object r = dbg.get(i);
                         sb.append(r.getClass().getSimpleName());
+                        // Probe station forms for their settlement manager state
+                        try {
+                            Object mgr = readField(r, "settlementObjectFormManager");
+                            if (mgr != null) {
+                                Object sw = readField(mgr, "switcher");
+                                Object wc = readField(mgr, "workstationConfigForm");
+                                String cur = "?";
+                                try {
+                                    if (sw instanceof necesse.gfx.forms.FormSwitcherTyped) {
+                                        Object c = ((necesse.gfx.forms.FormSwitcherTyped<?>) sw).getCurrent();
+                                        cur = c == null ? "null" : c.getClass().getSimpleName();
+                                    }
+                                } catch (Exception ignored) {}
+                                sb.append("{mgr,sw=").append(cur).append(",cfg=")
+                                    .append(wc == null ? "null" : wc.getClass().getSimpleName())
+                                    .append('}');
+                            }
+                        } catch (Exception ignored) {}
                         try {
                             if (r instanceof necesse.gfx.forms.Form) {
                                 necesse.gfx.forms.Form f = (necesse.gfx.forms.Form) r;
