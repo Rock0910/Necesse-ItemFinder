@@ -1167,10 +1167,13 @@ public class SearchForm extends Form {
     public void onCancel() {
         RangeOverlay.hide();
         TargetMarker.stop();
-        hidePanel();
-        try { wims2.MarkerRegistry.clear(); } catch (Exception ignored) {}
         try { savedX = getX(); savedY = getY(); } catch (Exception ignored) {}
+        try {
+            savedPanel = (panel != null) ? panel.getMode().name() : null;
+        } catch (Exception ignored) {}
+        hidePanel();
         savePos();
+        try { wims2.MarkerRegistry.clear(); } catch (Exception ignored) {}
         if (mainGame.formManager != null) mainGame.formManager.removeComponent(this);
         try { dispose(); } catch (Exception ignored) {} // ?��? WIMS ?��??�件套�?移除+?�放
         instance = null;
@@ -1179,6 +1182,7 @@ public class SearchForm extends Form {
     // ---- Window position: clamp on screen, remember, default to left ----
 
     private static Integer savedX = null, savedY = null;
+    private static String savedPanel = null; // HISTORY / FAVS / null
     private static boolean posLoaded = false;
 
     private static String posFile() {
@@ -1196,6 +1200,10 @@ public class SearchForm extends Form {
             try (java.io.FileInputStream in = new java.io.FileInputStream(f)) { p.load(in); }
             savedX = Integer.parseInt(p.getProperty("x"));
             savedY = Integer.parseInt(p.getProperty("y"));
+            try {
+                String pm = p.getProperty("panel");
+                savedPanel = ("HISTORY".equals(pm) || "FAVS".equals(pm)) ? pm : null;
+            } catch (Exception ignored) { savedPanel = null; }
         } catch (Exception ignored) {}
     }
 
@@ -1207,6 +1215,7 @@ public class SearchForm extends Form {
             java.util.Properties p = new java.util.Properties();
             p.setProperty("x", String.valueOf(savedX));
             p.setProperty("y", String.valueOf(savedY));
+            if (savedPanel != null) p.setProperty("panel", savedPanel);
             try (java.io.FileOutputStream out = new java.io.FileOutputStream(f)) {
                 p.store(out, "ItemFinder window pos");
             }
@@ -1288,6 +1297,12 @@ public class SearchForm extends Form {
             if (instance == null) {
                 instance = (SearchForm) mainGame.formManager.addComponent(new SearchForm(mainGame));
                 instance.restorePosition(window);
+                // Reopen the side panel remembered from last time
+                try {
+                    if (savedPanel != null) {
+                        instance.togglePanel(SidePanel.PanelMode.valueOf(savedPanel));
+                    }
+                } catch (Exception ignored) {}
             } else {
                 instance.onCancel();
             }
