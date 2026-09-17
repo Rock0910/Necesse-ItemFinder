@@ -9,8 +9,8 @@ project.ext.modID = "itemfinder" // The unique id of your mod. Must be all lower
 project.ext.modName = "ItemFinder" // The display name of your mod.
 project.ext.modVersion = "2.0.1" // Your current builds version. Must follow the xx.xx... format.
 project.ext.gameVersion = "1.3.3" // The target game version.
-project.ext.modDescription = "Category-filter item finder" // Short description of what your mod is.
-project.ext.author = "you" // Your name
+project.ext.modDescription = "Inspired by Where Is My Stuff?? (W.I.M.S.). Search nearby containers by keyword or category, favorites, history, rebindable hotkeys. Client-side." // Short description of what your mod is.
+project.ext.author = "Rock0910" // Your name
 
 /**
  * When setting clientside to true, it means servers do not need this mod for clients to connect and vice versa.
