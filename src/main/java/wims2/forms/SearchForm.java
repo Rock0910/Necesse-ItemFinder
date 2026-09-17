@@ -384,6 +384,14 @@ public class SearchForm extends Form {
                     instance.refreshPanel();
                 }
             } catch (Exception ignored) {}
+            // World feedback (visible even with our window closed)
+            try {
+                if (mainGame.getClient() != null && mainGame.getClient().getLevel() != null
+                    && mainGame.getClient().getPlayer() != null) {
+                    java.awt.Point pp = mainGame.getClient().getPlayer().getMapPos();
+                    wims2.ParticleSpawner.blip(mainGame.getClient().getLevel(), pp.x, pp.y, added);
+                }
+            } catch (Exception ignored) {}
             return true;
         } catch (Exception ignored) {}
         return false;

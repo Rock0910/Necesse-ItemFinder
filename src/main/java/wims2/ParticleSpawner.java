@@ -109,6 +109,40 @@ public class ParticleSpawner {
         } catch (Exception ignored) {}
     }
 
+    /** Tiny burst at the player confirming a favorite toggle (gold/blue = add, red = remove) */
+    public static void blip(necesse.level.maps.Level level, float x, float y, boolean added) {
+        if (level == null || level.entityManager == null) return;
+        try {
+            GameRandom r = GameRandom.globalRandom;
+            for (int i = 0; i < 8; i++) {
+                float px = x + r.getIntBetween(-12, 12);
+                float py = y + r.getIntBetween(-6, 6);
+                if (added) {
+                    boolean gold = (i % 2 == 0);
+                    MarkerRegistry.track(level.entityManager.addTopParticle(px, py,
+                        Particle.GType.COSMETIC)
+                        .sprite(gold
+                            ? necesse.gfx.GameResources.starParticles
+                            : necesse.gfx.GameResources.sapphireShardParticles)
+                        .ignoreLight(true)
+                        .alpha(0.9f)
+                        .sizeFadesInAndOut(8, 14, 0.5f)
+                        .lifeTime(900)
+                        .height(24.0f));
+                } else {
+                    MarkerRegistry.track(level.entityManager.addTopParticle(px, py,
+                        Particle.GType.COSMETIC)
+                        .sprite(necesse.gfx.GameResources.starParticles)
+                        .ignoreLight(true)
+                        .color(1.0f, 0.3f, 0.3f, 0.9f)
+                        .sizeFadesInAndOut(8, 14, 0.5f)
+                        .lifeTime(900)
+                        .height(24.0f));
+                }
+            }
+        } catch (Exception ignored) {}
+    }
+
     public static void initResources() {
         // No custom textures: star sprite is tinted red for fail markers.
     }
