@@ -460,6 +460,40 @@ public class SearchForm extends Form {
         } catch (Exception ignored) {}
     }
 
+    /** Open float menu's inner form (recipe pickers etc. live here, not in fields). */
+    private static Object floatMenuRoot(necesse.gfx.forms.MainGameFormManager fm) {
+        try {
+            Class<?> c = fm.getClass();
+            java.lang.reflect.Field f = null;
+            while (c != null) {
+                try { f = c.getDeclaredField("floatMenu"); break; }
+                catch (NoSuchFieldException e) { c = c.getSuperclass(); }
+            }
+            if (f == null) return null;
+            f.setAccessible(true);
+            Object cur = f.get(fm);
+            if (cur == null) return null;
+            java.lang.reflect.Field mf = cur.getClass().getDeclaredField("menu");
+            mf.setAccessible(true);
+            Object menu = mf.get(cur);
+            if (menu == null) return null;
+            Class<?> mc = menu.getClass();
+            while (mc != null) {
+                try {
+                    java.lang.reflect.Field ff = mc.getDeclaredField("form");
+                    ff.setAccessible(true);
+                    Object form = ff.get(menu);
+                    if (form != null) return form;
+                    break;
+                } catch (NoSuchFieldException e) {
+                    mc = mc.getSuperclass();
+                }
+            }
+            return menu;
+        } catch (Exception ignored) {}
+        return null;
+    }
+
     private static java.lang.reflect.Field[] vanillaRootFields;
     /** Every form/component registered on the form manager (cached field list). */
     private static java.util.ArrayList<Object> vanillaRoots(
@@ -474,6 +508,8 @@ public class SearchForm extends Form {
             if (fm.equipment != null) roots.add(fm.equipment);
             if (fm.focus != null) roots.add(fm.focus);
             if (fm.crafting != null) roots.add(fm.crafting);
+            Object floatRoot = floatMenuRoot(fm);
+            if (floatRoot != null) roots.add(floatRoot);
         } catch (Exception ignored) {}
         try {
             if (vanillaRootFields == null) {
