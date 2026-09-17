@@ -1,5 +1,7 @@
 # ItemFinder
 
+![ItemFinder](ItemFinder.png)
+
 Necesse 1.3 的客戶端找物 Mod。
 
 由 Where Is My Stuff 模組啟發
