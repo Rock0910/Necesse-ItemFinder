@@ -1464,7 +1464,7 @@ public class SearchForm extends Form {
         try {
             if (wims2.ModMain.favControl != null && wims2.ModMain.favControl.isPressed()
                 && !necesse.gfx.forms.components.FormTypingComponent.isCurrentlyTyping()
-                && System.currentTimeMillis() - lastFavPress > 400) {
+                && System.currentTimeMillis() - lastFavPress > 150) {
                 lastFavPress = System.currentTimeMillis();
                 boolean done = false;
                 if (instance != null) done = instance.favHovered();
