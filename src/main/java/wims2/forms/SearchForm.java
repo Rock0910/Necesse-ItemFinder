@@ -78,6 +78,8 @@ public class SearchForm extends Form {
         addComponent(textInput);
         textInput.placeHolder = new StaticMessage("copper, bread, potion...");
         textInput.onSubmit(e -> { defocusInput(); applyFilter(true); });
+        // Clicking anywhere outside the box drops focus (default is false)
+        try { textInput.allowUsedMouseClickStopTyping = true; } catch (Exception ignored) {}
         FormContentIconButton scanBtn = new FormContentIconButton(
             360, inputY, FormInputSize.SIZE_32, ButtonColor.BASE,
             uiStyle.button_search_24, new StaticMessage("Scan"));
