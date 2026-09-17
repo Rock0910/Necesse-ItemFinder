@@ -413,6 +413,15 @@ public class SearchForm extends Form {
                         }
                         return;
                     }
+                    if (hoverComp(comp)) {
+                        necesse.inventory.InventoryItem held = holderItem(comp);
+                        if (held != null) {
+                            String sid = "?";
+                            try { sid = held.item.getStringID(); } catch (Exception ignored) {}
+                            out.add("Holder:" + comp.getClass().getSimpleName() + ":" + sid);
+                            return;
+                        }
+                    }
                     if (comp instanceof necesse.gfx.forms.components.FormContainerRecipe
                         || comp instanceof necesse.gfx.forms.components.containerSlot.FormContainerSlot) {
                         boolean isRecipe = comp instanceof necesse.gfx.forms.components.FormContainerRecipe;
@@ -704,18 +713,55 @@ public class SearchForm extends Form {
         try {
             walkTree(root, new java.util.HashSet<Object>(), comp -> {
                 if (hit[0] != null) return;
-                // Recipe/ingredient list elements (settler workstation lists etc.)
+                // Recipe list elements (settler workstation lists etc.)
                 if (comp instanceof necesse.gfx.forms.components.lists.FormGeneralList) {
                     necesse.inventory.InventoryItem item = listHoveredItem(comp);
                     if (item != null) hit[0] = item;
                     return;
                 }
                 if (!hoverComp(comp)) return;
+                // Row-level recipe holders (workstation config rows etc.)
+                necesse.inventory.InventoryItem held = holderItem(comp);
+                if (held != null) { hit[0] = held; return; }
                 necesse.inventory.InventoryItem item = slotItem(comp);
                 if (item != null) hit[0] = item;
             });
         } catch (Exception ignored) {}
         return hit[0];
+    }
+
+    /**
+     * Duck-typed recipe holder: any component with an "element" field whose
+     * value has a "recipe" (Recipe) field, e.g. workstation config rows.
+     * Lets hovering the row favorite its result item.
+     */
+    private static necesse.inventory.InventoryItem holderItem(Object comp) {
+        try {
+            Object element = readField(comp, "element");
+            if (element == null) return null;
+            Object recipe = readField(element, "recipe");
+            if (recipe instanceof necesse.inventory.recipe.Recipe) {
+                return ((necesse.inventory.recipe.Recipe) recipe).resultItem;
+            }
+        } catch (Exception ignored) {}
+        return null;
+    }
+
+    private static Object readField(Object o, String name) {
+        if (o == null) return null;
+        Class<?> c = o.getClass();
+        while (c != null) {
+            try {
+                java.lang.reflect.Field f = c.getDeclaredField(name);
+                f.setAccessible(true);
+                return f.get(o);
+            } catch (NoSuchFieldException e) {
+                c = c.getSuperclass();
+            } catch (Exception e) {
+                return null;
+            }
+        }
+        return null;
     }
 
     /** Hovered element of a FormGeneralList (recipe lists, ...).
