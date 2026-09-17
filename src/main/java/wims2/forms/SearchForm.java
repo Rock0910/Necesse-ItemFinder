@@ -368,9 +368,14 @@ public class SearchForm extends Form {
                 }
             } catch (Exception ignored) {}
             necesse.inventory.InventoryItem target = null;
-            for (Object root : roots) {
-                target = findHoveredSlot(root);
-                if (target != null) break;
+            // Dedicated workstation-config check first (its rows hide
+            // behind switchers the generic walk can't always reach)
+            try { target = configRowHit(fm); } catch (Exception ignored) {}
+            if (target == null) {
+                for (Object root : vanillaRoots(fm)) {
+                    target = findHoveredSlot(root);
+                    if (target != null) break;
+                }
             }
             if (target == null || target.item == null) {
                 try {
@@ -876,6 +881,44 @@ public class SearchForm extends Form {
             Object recipe = readField(element, "recipe");
             if (recipe instanceof necesse.inventory.recipe.Recipe) {
                 return ((necesse.inventory.recipe.Recipe) recipe).resultItem;
+            }
+        } catch (Exception ignored) {}
+        return null;
+    }
+
+    /**
+     * Workstation config rows (settler run-until UI): find the open
+     * SettlementWorkstationConfigForm via station forms and hit-test
+     * each recipe row directly, bypassing the generic walk.
+     */
+    private static necesse.inventory.InventoryItem configRowHit(
+        necesse.gfx.forms.MainGameFormManager fm) {
+        try {
+            for (Object root : vanillaRoots(fm)) {
+                try {
+                    if (root == null) continue;
+                    String cn = root.getClass().getSimpleName();
+                    boolean station = cn.contains("CraftingStationContainerForm")
+                        || readField(root, "settlementObjectFormManager") != null;
+                    if (!station) continue;
+                    Object mgr = readField(root, "settlementObjectFormManager");
+                    if (mgr == null) continue;
+                    Object cfg = readField(mgr, "workstationConfigForm");
+                    if (cfg == null) continue;
+                    Object recs = readField(cfg, "recipes");
+                    if (!(recs instanceof java.util.List)) continue;
+                    for (Object row : (java.util.List<?>) recs) {
+                        if (row == null) continue;
+                        if (!mouseHoverComp(row)) continue;
+                        Object el = readField(row, "element");
+                        Object rec = readField(el, "recipe");
+                        if (rec instanceof necesse.inventory.recipe.Recipe) {
+                            necesse.inventory.InventoryItem item =
+                                ((necesse.inventory.recipe.Recipe) rec).resultItem;
+                            if (item != null) return item;
+                        }
+                    }
+                } catch (Exception ignored) {}
             }
         } catch (Exception ignored) {}
         return null;
