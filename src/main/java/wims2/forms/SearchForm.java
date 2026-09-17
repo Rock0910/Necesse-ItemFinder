@@ -406,8 +406,26 @@ public class SearchForm extends Form {
                             counts[2]++;
                             if (firstRecipeBox[0] == null) {
                                 try {
-                                    firstRecipeBox[0] = String.valueOf(
-                                        ((necesse.gfx.forms.components.FormComponent) comp).getHitboxes());
+                                    java.util.List<java.awt.Rectangle> boxes =
+                                        ((necesse.gfx.forms.components.FormComponent) comp).getHitboxes();
+                                    java.awt.Rectangle b = (boxes == null || boxes.isEmpty())
+                                        ? null : boxes.get(0);
+                                    java.awt.Point sp = null;
+                                    try {
+                                        sp = ((necesse.gfx.forms.components.FormComponent) comp)
+                                            .getScreenPosition(true);
+                                    } catch (Exception ignored) {}
+                                    int cx = 0, cy = 0;
+                                    try {
+                                        if (comp instanceof necesse.gfx.forms.position.FormPositionContainer) {
+                                            necesse.gfx.forms.position.FormPositionContainer pc =
+                                                (necesse.gfx.forms.position.FormPositionContainer) comp;
+                                            cx = pc.getX();
+                                            cy = pc.getY();
+                                        }
+                                    } catch (Exception ignored) {}
+                                    firstRecipeBox[0] = "box=" + b + " screen=" + sp
+                                        + " pos=" + cx + "," + cy;
                                 } catch (Exception ignored) {}
                             }
                         }
