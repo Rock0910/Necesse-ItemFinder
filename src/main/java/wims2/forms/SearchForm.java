@@ -344,12 +344,31 @@ public class SearchForm extends Form {
      * equipment, open containers, crafting stations, modded UIs...),
      * so station fuel/material/output slots work too.
      */
-    static boolean favVanilla(MainGame mainGame) {
+    static boolean favVanilla(MainGame mainGame, TickManager tm) {
         try {
             if (mainGame == null || mainGame.formManager == null) return false;
             necesse.gfx.forms.MainGameFormManager fm = mainGame.formManager;
+            java.util.ArrayList<Object> roots = vanillaRoots(fm);
+            // Prime hover flags with a synthetic mouse-move at the current
+            // cursor: vanilla's own pipeline (scroll, offsets, subforms).
+            // Fresh event per root since components consume move events.
+            try {
+                if (tm != null && mainGame.getClient() != null
+                    && mainGame.getClient().getPlayer() != null) {
+                    for (Object root : roots) {
+                        if (!(root instanceof necesse.gfx.forms.components.FormComponent)) continue;
+                        try {
+                            necesse.engine.input.InputEvent move =
+                                necesse.engine.input.InputEvent.MouseMoveEvent(
+                                    necesse.engine.input.Input.mousePos, tm);
+                            ((necesse.gfx.forms.components.FormComponent) root)
+                                .handleInputEvent(move, tm, mainGame.getClient().getPlayer());
+                        } catch (Exception ignored) {}
+                    }
+                }
+            } catch (Exception ignored) {}
             necesse.inventory.InventoryItem target = null;
-            for (Object root : vanillaRoots(fm)) {
+            for (Object root : roots) {
                 target = findHoveredSlot(root);
                 if (target != null) break;
             }
@@ -1373,7 +1392,7 @@ public class SearchForm extends Form {
                 lastFavPress = System.currentTimeMillis();
                 boolean done = false;
                 if (instance != null) done = instance.favHovered();
-                if (!done) favVanilla(mainGame);
+                if (!done) favVanilla(mainGame, tm);
             }
         } catch (Exception ignored) {}
         if (!mainGame.formManager.pauseMenu.isHidden()) {
