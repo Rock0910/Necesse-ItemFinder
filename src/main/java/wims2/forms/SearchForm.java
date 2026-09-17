@@ -29,6 +29,7 @@ import java.util.List;
 public class SearchForm extends Form {
 
     private static SearchForm instance;
+    private static long lastFavPress;
     private final MainGame mainGame;
     private FormTextInput textInput;
     private FormDropdownSelectionButton<String> categoryDropdown;
@@ -378,6 +379,7 @@ public class SearchForm extends Form {
             String name = sid;
             try { name = target.getItemDisplayName(); } catch (Exception ignored) {}
             final String msg = (added ? "+ Fav: " : "- Fav: ") + name;
+            System.out.println("ItemFinder: U-fav " + msg + " [" + sid + "]");
             try {
                 if (instance != null) {
                     instance.statusLabel.setText(msg);
@@ -1289,9 +1291,12 @@ public class SearchForm extends Form {
         if (mainGame.getClient() == null || mainGame.getClient().getPlayer() == null) return;
         // U key (works with our window open or closed, skipped while typing):
         // our icons first, else vanilla backpack/chest/cursor item.
+        // Debounced: one physical press = one toggle, even across frames.
         try {
             if (wims2.ModMain.favControl != null && wims2.ModMain.favControl.isPressed()
-                && !necesse.gfx.forms.components.FormTypingComponent.isCurrentlyTyping()) {
+                && !necesse.gfx.forms.components.FormTypingComponent.isCurrentlyTyping()
+                && System.currentTimeMillis() - lastFavPress > 400) {
+                lastFavPress = System.currentTimeMillis();
                 boolean done = false;
                 if (instance != null) done = instance.favHovered();
                 if (!done) favVanilla(mainGame);
