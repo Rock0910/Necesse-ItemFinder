@@ -393,6 +393,7 @@ public class SearchForm extends Form {
     private static void debugHovering(Object root, java.util.ArrayList<String> out) {
         if (root == null) return;
         final int[] counts = new int[3]; // visited, slots, recipes
+        final String[] firstRecipeBox = { null };
         try {
             walkTree(root, new java.util.HashSet<Object>(), comp -> {
                 if (out.size() >= 10) return;
@@ -401,7 +402,15 @@ public class SearchForm extends Form {
                     if (comp instanceof necesse.gfx.forms.components.FormContainerRecipe
                         || comp instanceof necesse.gfx.forms.components.containerSlot.FormContainerSlot) {
                         boolean isRecipe = comp instanceof necesse.gfx.forms.components.FormContainerRecipe;
-                        if (isRecipe) counts[2]++;
+                        if (isRecipe) {
+                            counts[2]++;
+                            if (firstRecipeBox[0] == null) {
+                                try {
+                                    firstRecipeBox[0] = String.valueOf(
+                                        ((necesse.gfx.forms.components.FormComponent) comp).getHitboxes());
+                                } catch (Exception ignored) {}
+                            }
+                        }
                         else counts[1]++;
                         if (hoverComp(comp)) {
                             out.add(comp.getClass().getSimpleName() + ":"
@@ -411,6 +420,11 @@ public class SearchForm extends Form {
                 } catch (Exception ignored) {}
             });
             out.add("~visited=" + counts[0] + " slots=" + counts[1] + " recipes=" + counts[2]);
+            try {
+                java.awt.Point mp = mouseHudPos();
+                out.add("~mouse=" + (mp == null ? "null" : mp.x + "," + mp.y)
+                    + " recipebox=" + firstRecipeBox[0]);
+            } catch (Exception ignored) {}
         } catch (Exception ignored) {}
     }
 
@@ -570,19 +584,27 @@ public class SearchForm extends Form {
     /** Manual hover test: current mouse pos vs component hitboxes (HUD space).
      * Flags alone miss when no mouse-move event fired lately. */
     private static boolean mouseHoverComp(Object comp) {
+        java.awt.Point mp = mouseHudPos();
+        if (mp == null) return false;
         try {
             if (!(comp instanceof necesse.gfx.forms.components.FormComponent)) return false;
-            necesse.engine.input.InputPosition mp = null;
-            try { mp = necesse.engine.input.Input.mousePos; } catch (Exception ignored) {}
-            if (mp == null) return false;
             java.util.List<java.awt.Rectangle> boxes =
                 ((necesse.gfx.forms.components.FormComponent) comp).getHitboxes();
             if (boxes == null) return false;
             for (java.awt.Rectangle r : boxes) {
-                if (r != null && r.contains(mp.hudX, mp.hudY)) return true;
+                if (r != null && r.contains(mp.x, mp.y)) return true;
             }
         } catch (Exception ignored) {}
         return false;
+    }
+
+    private static java.awt.Point mouseHudPos() {
+        try {
+            necesse.engine.input.InputPosition pos = necesse.engine.input.Input.mousePos;
+            if (pos == null) return null;
+            return new java.awt.Point(pos.hudX, pos.hudY);
+        } catch (Exception ignored) {}
+        return null;
     }
 
     private static boolean hoverComp(Object comp) {
