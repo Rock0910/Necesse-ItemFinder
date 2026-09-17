@@ -358,12 +358,24 @@ public class SearchForm extends Form {
                     sb.append(dbg.size()).append(" [");
                     for (int i = 0; i < dbg.size(); i++) {
                         if (i > 0) sb.append(',');
-                        sb.append(dbg.get(i).getClass().getSimpleName());
+                        Object r = dbg.get(i);
+                        sb.append(r.getClass().getSimpleName());
+                        try {
+                            if (r instanceof necesse.gfx.forms.Form) {
+                                necesse.gfx.forms.Form f = (necesse.gfx.forms.Form) r;
+                                sb.append('(').append(f.getX()).append(',').append(f.getY())
+                                    .append(' ').append(f.getWidth()).append('x').append(f.getHeight());
+                                try {
+                                    if (f.isHidden()) sb.append('H');
+                                } catch (Exception ignored) {}
+                                sb.append(')');
+                            }
+                        } catch (Exception ignored) {}
                     }
                     sb.append("] hovering=[");
                     java.util.ArrayList<String> hov = new java.util.ArrayList<>();
                     for (Object root : dbg) debugHovering(root, hov);
-                    for (int i = 0; i < Math.min(10, hov.size()); i++) {
+                    for (int i = 0; i < Math.min(40, hov.size()); i++) {
                         if (i > 0) sb.append(',');
                         sb.append(hov.get(i));
                     }
