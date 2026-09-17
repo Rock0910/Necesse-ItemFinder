@@ -400,6 +400,11 @@ public class SearchForm extends Form {
                 try {
                     counts[0]++;
                     if (comp instanceof necesse.gfx.forms.components.lists.FormGeneralList) {
+                        out.add("List:" + comp.getClass().getSimpleName()
+                            + "=" + debugListIndex(comp));
+                        return;
+                    }
+                    if (comp instanceof necesse.gfx.forms.components.lists.FormGeneralList) {
                         necesse.inventory.InventoryItem item = listHoveredItem(comp);
                         if (item != null) {
                             String sid = "?";
@@ -730,6 +735,46 @@ public class SearchForm extends Form {
             }
         } catch (Exception ignored) {}
         return null;
+    }
+
+    /** Debug: which grid index the mouse maps to (-1 = none / error code). */
+    private static String debugListIndex(Object list) {
+        try {
+            java.awt.Point mouse = mouseHudPos();
+            if (mouse == null) return "nomouse";
+            if (!(list instanceof necesse.gfx.forms.components.lists.FormGeneralGridList)) {
+                return "nongrid";
+            }
+            necesse.gfx.forms.components.lists.FormGeneralGridList<?> grid =
+                (necesse.gfx.forms.components.lists.FormGeneralGridList<?>) list;
+            int elementWidth = grid.elementWidth;
+            int elementHeight = grid.elementHeight;
+            int width = readIntField(list, "width");
+            int scroll = readIntField(list, "scroll");
+            java.util.List<?> els = listElements(list);
+            java.awt.Point lsp = ((necesse.gfx.forms.components.FormComponent) list)
+                .getScreenPosition(true);
+            if (elementWidth <= 0 || width <= 0 || els == null || lsp == null) {
+                return "bad ew=" + elementWidth + " w=" + width
+                    + " n=" + (els == null ? -1 : els.size())
+                    + " sp=" + (lsp == null ? "null" : lsp.x + "," + lsp.y);
+            }
+            int cols = Math.max(1, width / elementWidth);
+            for (int i = 0; i < els.size(); i++) {
+                int row = i / cols;
+                int ex = (i - row * cols) * elementWidth + (width % elementWidth) / 2;
+                int ey = row * elementHeight - scroll + 16;
+                if (mouse.x >= lsp.x + ex && mouse.y >= lsp.y + ey
+                    && mouse.x < lsp.x + ex + elementWidth
+                    && mouse.y < lsp.y + ey + elementHeight) {
+                    return "" + i + "/" + els.size();
+                }
+            }
+            return "-1/" + els.size() + "@" + mouse.x + "," + mouse.y
+                + " lsp=" + lsp.x + "," + lsp.y + " cols=" + cols;
+        } catch (Exception e) {
+            return "err";
+        }
     }
 
     private static int readIntField(Object o, String name) {
