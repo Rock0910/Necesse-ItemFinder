@@ -32,7 +32,7 @@ public class SidePanel extends Form {
     private final List<String> ids = new ArrayList<>();
 
     public SidePanel(SearchForm main) {
-        super("wims2side", 240, 120);
+        super("itemfinderside", 240, 120);
         this.main = main;
         try { drawBaseAlpha = 0.45f; } catch (Exception ignored) {}
         FormFlow flow = new FormFlow(5);

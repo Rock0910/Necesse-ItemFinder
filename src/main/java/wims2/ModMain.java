@@ -15,29 +15,28 @@ public class ModMain {
 
     public void postInit() {
         if (GlobalData.isServer()) {
-            System.out.println("WIMS2: client-only, skip server init.");
+            System.out.println("ItemFinder: client-only, skip server init.");
             return;
         }
-        System.out.println("WIMS2: registering control.");
+        System.out.println("ItemFinder: registering control.");
         // Mod controls are rebindable in Settings > Controls (mod section).
         // Display name + tooltip so players can find and rebind it there.
-        openSearchControl = Control.addModControl(new Control(89, "wims2opensearch",
-            new necesse.engine.localization.message.StaticMessage("WIMS2 search")));
+        openSearchControl = Control.addModControl(new Control(89, "itemfinderopensearch",
+            new necesse.engine.localization.message.StaticMessage("ItemFinder search")));
         try {
             openSearchControl.tooltip =
                 new necesse.engine.localization.message.StaticMessage("Open finder");
         } catch (Exception ignored) {}
         // Favorite toggle for the hovered icon. U is free in vanilla defaults;
         // rebindable in Settings > Controls like the search key above.
-        favControl = Control.addModControl(new Control(85, "wims2favorite",
-            new necesse.engine.localization.message.StaticMessage("WIMS2 favorite")));
+        favControl = Control.addModControl(new Control(85, "itemfinderfavorite",
+            new necesse.engine.localization.message.StaticMessage("ItemFinder favorite")));
         try {
             favControl.tooltip =
                 new necesse.engine.localization.message.StaticMessage("Favorite icon");
         } catch (Exception ignored) {}
-        // 1.3 的 ChatCommand 簽名跟舊版差很多（要實作 getUsage/getAction/run/autocomplete...），
-        // v1 先不註冊文字指令，只留 UI，避免編譯地雷。v2 要加再補 WimsCommand.java。
-    }
+        // 1.3 ??ChatCommand 簽�?跟�??�差很�?（�?實�? getUsage/getAction/run/autocomplete...）�?
+        // v1 ?��?註�??��??�令，只??UI，避?�編譯地?�。v2 要�??��? WimsCommand.java??    }
 
     public void initResources() {
         ParticleSpawner.initResources();

@@ -40,7 +40,7 @@ public class SearchForm extends Form {
     private int currentRadius = 16;
 
     public SearchForm(MainGame mainGame) {
-        super("wims2search", 460, 120);
+        super("itemfindersearch", 460, 120);
         this.mainGame = mainGame;
         // Semi-transparent window background so the game is visible behind it
         try { drawBaseAlpha = 0.45f; } catch (Exception ignored) {}
@@ -49,7 +49,7 @@ public class SearchForm extends Form {
         // Title + mode icons + close (X) at top-right
         necesse.gfx.ui.GameInterfaceStyle uiStyle = necesse.engine.Settings.UI;
         int titleY = flow.next();
-        FormFairTypeLabel title = new FormFairTypeLabel("WIMS2", 5, titleY);
+        FormFairTypeLabel title = new FormFairTypeLabel("ItemFinder", 5, titleY);
         title.setFontOptions(new FontOptions(20));
         addComponent(title);
         FormContentIconButton histBtn = new FormContentIconButton(
@@ -584,7 +584,7 @@ public class SearchForm extends Form {
     private static boolean posLoaded = false;
 
     private static String posFile() {
-        try { return necesse.engine.GlobalData.cfgPath() + "wims2pos.cfg"; }
+        try { return necesse.engine.GlobalData.cfgPath() + "itemfinderpos.cfg"; }
         catch (Exception e) { return null; }
     }
 
@@ -610,7 +610,7 @@ public class SearchForm extends Form {
             p.setProperty("x", String.valueOf(savedX));
             p.setProperty("y", String.valueOf(savedY));
             try (java.io.FileOutputStream out = new java.io.FileOutputStream(f)) {
-                p.store(out, "WIMS2 window pos");
+                p.store(out, "ItemFinder window pos");
             }
         } catch (Exception ignored) {}
     }

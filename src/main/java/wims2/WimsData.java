@@ -32,7 +32,7 @@ public class WimsData {
     public static synchronized void load() {
         if (loaded) return;
         loaded = true;
-        String hf = cfg("wims2histitems.cfg");
+        String hf = cfg("itemfinderhistitems.cfg");
         if (hf != null) {
             try (BufferedReader br = new BufferedReader(new InputStreamReader(
                 new FileInputStream(hf), StandardCharsets.UTF_8))) {
@@ -43,7 +43,7 @@ public class WimsData {
                 }
             } catch (Exception ignored) {}
         }
-        String ff = cfg("wims2fav.cfg");
+        String ff = cfg("itemfinderfav.cfg");
         if (ff != null) {
             try (BufferedReader br = new BufferedReader(new InputStreamReader(
                 new FileInputStream(ff), StandardCharsets.UTF_8))) {
@@ -79,7 +79,7 @@ public class WimsData {
     }
 
     private static synchronized void saveHistory() {
-        String hf = cfg("wims2histitems.cfg");
+        String hf = cfg("itemfinderhistitems.cfg");
         if (hf == null) return;
         try (PrintWriter pw = new PrintWriter(new OutputStreamWriter(
             new FileOutputStream(hf), StandardCharsets.UTF_8))) {
@@ -114,7 +114,7 @@ public class WimsData {
     }
 
     private static synchronized void saveFavorites() {
-        String ff = cfg("wims2fav.cfg");
+        String ff = cfg("itemfinderfav.cfg");
         if (ff == null) return;
         try (PrintWriter pw = new PrintWriter(new OutputStreamWriter(
             new FileOutputStream(ff), StandardCharsets.UTF_8))) {
