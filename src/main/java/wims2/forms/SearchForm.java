@@ -557,18 +557,19 @@ public class SearchForm extends Form {
                     new java.util.ArrayList<>();
                 Class<?> c = fm.getClass();
                 while (c != null) {
+                    String cn = c.getName();
+                    if (cn.startsWith("java.") || cn.startsWith("javax.")) break;
                     for (java.lang.reflect.Field f : c.getDeclaredFields()) {
                         try {
                             if (java.lang.reflect.Modifier.isStatic(f.getModifiers())) continue;
-                            Class<?> t = f.getType();
-                            if (t.isInterface()
-                                || necesse.gfx.forms.components.FormComponent.class.isAssignableFrom(t)
-                                || necesse.gfx.forms.ContainerComponent.class.isAssignableFrom(t)
-                                || java.util.Collection.class.isAssignableFrom(t)
-                                || java.util.Map.class.isAssignableFrom(t)) {
-                                f.setAccessible(true);
-                                all.add(f);
-                            }
+                            if (f.getType().isPrimitive()) continue;
+                            String tn = f.getType().getName();
+                            // Skip JDK noise; keep everything else and let the
+                            // walk itself decide (concrete holder classes too).
+                            if (tn.startsWith("java.") || tn.startsWith("javax.")
+                                || tn.startsWith("sun.") || tn.startsWith("jdk.")) continue;
+                            f.setAccessible(true);
+                            all.add(f);
                         } catch (Exception ignored) {}
                     }
                     c = c.getSuperclass();
@@ -646,7 +647,10 @@ public class SearchForm extends Form {
                                 for (Object o : (java.util.Collection<?>) val) {
                                     walkTree(o, visited, v);
                                 }
-                            } else {
+                            } else if (val != null && val.getClass().getName()
+                                .startsWith("necesse.gfx.forms.")) {
+                                // Holder objects inside forms code only.
+                                // Never client/level/entities (would walk the world).
                                 walkTree(val, visited, v);
                             }
                         } catch (Exception ignored) {}
