@@ -403,7 +403,7 @@ public class SearchForm extends Form {
                         boolean isRecipe = comp instanceof necesse.gfx.forms.components.FormContainerRecipe;
                         if (isRecipe) counts[2]++;
                         else counts[1]++;
-                        if (isHoveringComp(comp)) {
+                        if (hoverComp(comp)) {
                             out.add(comp.getClass().getSimpleName() + ":"
                                 + (slotItem(comp) != null ? "item" : "empty"));
                         }
@@ -482,6 +482,13 @@ public class SearchForm extends Form {
                 return;
             }
             if (!(root instanceof necesse.gfx.forms.components.FormComponent)) return;
+            // Hidden forms can't be hovered: skip the whole subtree
+            // (stale hitboxes would false-positive on the game world behind)
+            if (root instanceof necesse.gfx.forms.Form) {
+                try {
+                    if (((necesse.gfx.forms.Form) root).isHidden()) return;
+                } catch (Exception ignored) {}
+            }
             v.visit(root);
             if (root instanceof necesse.gfx.forms.ComponentListContainer) {
                 try {
@@ -560,12 +567,34 @@ public class SearchForm extends Form {
         return false;
     }
 
+    /** Manual hover test: current mouse pos vs component hitboxes (HUD space).
+     * Flags alone miss when no mouse-move event fired lately. */
+    private static boolean mouseHoverComp(Object comp) {
+        try {
+            if (!(comp instanceof necesse.gfx.forms.components.FormComponent)) return false;
+            necesse.engine.input.InputPosition mp = null;
+            try { mp = necesse.engine.input.Input.mousePos; } catch (Exception ignored) {}
+            if (mp == null) return false;
+            java.util.List<java.awt.Rectangle> boxes =
+                ((necesse.gfx.forms.components.FormComponent) comp).getHitboxes();
+            if (boxes == null) return false;
+            for (java.awt.Rectangle r : boxes) {
+                if (r != null && r.contains(mp.hudX, mp.hudY)) return true;
+            }
+        } catch (Exception ignored) {}
+        return false;
+    }
+
+    private static boolean hoverComp(Object comp) {
+        return isHoveringComp(comp) || mouseHoverComp(comp);
+    }
+
     private static necesse.inventory.InventoryItem findHoveredSlot(Object root) {
         final necesse.inventory.InventoryItem[] hit = { null };
         try {
             walkTree(root, new java.util.HashSet<Object>(), comp -> {
                 if (hit[0] != null) return;
-                if (!isHoveringComp(comp)) return;
+                if (!hoverComp(comp)) return;
                 necesse.inventory.InventoryItem item = slotItem(comp);
                 if (item != null) hit[0] = item;
             });
