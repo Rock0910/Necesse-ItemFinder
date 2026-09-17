@@ -532,7 +532,8 @@ public class SearchForm extends Form {
                             Class<?> t = f.getType();
                             if (necesse.gfx.forms.components.FormComponent.class.isAssignableFrom(t)
                                 || necesse.gfx.forms.ContainerComponent.class.isAssignableFrom(t)
-                                || java.util.Collection.class.isAssignableFrom(t)) {
+                                || java.util.Collection.class.isAssignableFrom(t)
+                                || java.util.Map.class.isAssignableFrom(t)) {
                                 f.setAccessible(true);
                                 all.add(f);
                             }
@@ -546,7 +547,11 @@ public class SearchForm extends Form {
                 try {
                     Object v = f.get(fm);
                     if (v == null) continue;
-                    if (v instanceof java.util.Collection) {
+                    if (v instanceof java.util.Map) {
+                        for (Object o : ((java.util.Map<?, ?>) v).values()) {
+                            if (o != null && !roots.contains(o)) roots.add(o);
+                        }
+                    } else if (v instanceof java.util.Collection) {
                         for (Object o : (java.util.Collection<?>) v) {
                             if (o != null && !roots.contains(o)) roots.add(o);
                         }
@@ -596,24 +601,24 @@ public class SearchForm extends Form {
                 java.lang.reflect.Field[] fields;
                 try { fields = c.getDeclaredFields(); }
                 catch (Exception e) { break; }
-                for (java.lang.reflect.Field f : fields) {
-                    try {
-                        if (java.lang.reflect.Modifier.isStatic(f.getModifiers())) continue;
-                        Class<?> t = f.getType();
-                        if (necesse.gfx.forms.components.FormComponent.class.isAssignableFrom(t)
-                            || java.util.Collection.class.isAssignableFrom(t)) {
+                    for (java.lang.reflect.Field f : fields) {
+                        try {
+                            if (java.lang.reflect.Modifier.isStatic(f.getModifiers())) continue;
                             f.setAccessible(true);
                             Object val = f.get(root);
-                            if (val instanceof java.util.Collection) {
+                            if (val instanceof java.util.Map) {
+                                for (Object o : ((java.util.Map<?, ?>) val).values()) {
+                                    walkTree(o, visited, v);
+                                }
+                            } else if (val instanceof java.util.Collection) {
                                 for (Object o : (java.util.Collection<?>) val) {
                                     walkTree(o, visited, v);
                                 }
                             } else {
                                 walkTree(val, visited, v);
                             }
-                        }
-                    } catch (Exception ignored) {}
-                }
+                        } catch (Exception ignored) {}
+                    }
                 c = c.getSuperclass();
             }
         } catch (Exception ignored) {}
