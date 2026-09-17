@@ -424,11 +424,43 @@ public class SearchForm extends Form {
                     counts[0]++;
                     String cn = comp.getClass().getSimpleName();
                     if (kinds.size() < 40) kinds.add(cn);
-                    // Any component under the mouse (identifies mystery hover targets)
-                    if (under.size() < 6 && comp instanceof necesse.gfx.forms.components.FormComponent) {
+                    // Any component under the mouse (identifies mystery hover targets).
+                    // Tests both hitbox interpretations: parent-space (minus pos)
+                    // and component-local (plus pos), to learn the true convention.
+                    if (under.size() < 8 && comp instanceof necesse.gfx.forms.components.FormComponent) {
                         try {
-                            if (mouseHoverComp(comp)) {
-                                under.add("@" + comp.getClass().getSimpleName());
+                            java.awt.Point mp2 = mouseHudPos();
+                            necesse.gfx.forms.components.FormComponent fc2 =
+                                (necesse.gfx.forms.components.FormComponent) comp;
+                            java.util.List<java.awt.Rectangle> boxes2 = fc2.getHitboxes();
+                            java.awt.Point sp2 = null;
+                            int ox2 = 0, oy2 = 0;
+                            try {
+                                sp2 = fc2.getScreenPosition(true);
+                                if (fc2 instanceof necesse.gfx.forms.position.FormPositionContainer) {
+                                    necesse.gfx.forms.position.FormPositionContainer pc2 =
+                                        (necesse.gfx.forms.position.FormPositionContainer) fc2;
+                                    ox2 = pc2.getX();
+                                    oy2 = pc2.getY();
+                                }
+                            } catch (Exception ignored) {}
+                            if (mp2 != null && sp2 != null && boxes2 != null) {
+                                for (java.awt.Rectangle b2 : boxes2) {
+                                    if (b2 == null) continue;
+                                    boolean parentSpace = mp2.x >= sp2.x - ox2 + b2.x
+                                        && mp2.y >= sp2.y - oy2 + b2.y
+                                        && mp2.x < sp2.x - ox2 + b2.x + b2.width
+                                        && mp2.y < sp2.y - oy2 + b2.y + b2.height;
+                                    boolean localSpace = mp2.x >= sp2.x + b2.x
+                                        && mp2.y >= sp2.y + b2.y
+                                        && mp2.x < sp2.x + b2.x + b2.width
+                                        && mp2.y < sp2.y + b2.y + b2.height;
+                                    if (parentSpace || localSpace) {
+                                        under.add("@" + comp.getClass().getSimpleName()
+                                            + (parentSpace ? "[P]" : "[L]")
+                                            + "(" + b2.x + "," + b2.y + ")");
+                                    }
+                                }
                             }
                         } catch (Exception ignored) {}
                     }
