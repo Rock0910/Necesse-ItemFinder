@@ -1,5 +1,14 @@
 package wims2;
 
+/**
+ * ItemFinder (Necesse 1.3)
+ *
+ * 由 Where Is My Stuff?? (W.I.M.S.) 模組啟發
+ * 使用 Opencode 開發的 Mod
+ * 除非自己用不順或遇到 BUG，否則不會更新
+ * 2026-09-18
+ */
+
 import necesse.engine.modLoader.annotations.ModEntry;
 import necesse.engine.GlobalData;
 import necesse.engine.input.Control;
@@ -41,7 +50,7 @@ public class ModMain {
         try {
             findControl.tooltip = wims2.L.m("ctlfindtip");
         } catch (Exception ignored) {}
-        // 1.3 ??ChatCommand 簽�?跟�??�差很�?（�?實�? getUsage/getAction/run/autocomplete...）�?
+        // 不註冊聊天指令，避免 ChatCommand 簽名變動問題
         // v1 UI only, no chat command to avoid signature issues.
     }
 
