@@ -581,18 +581,38 @@ public class SearchForm extends Form {
         return false;
     }
 
-    /** Manual hover test: current mouse pos vs component hitboxes (HUD space).
-     * Flags alone miss when no mouse-move event fired lately. */
+    /** Manual hover test: current mouse pos vs component hitboxes.
+     * Hitboxes live in PARENT space (parents translate events down), so
+     * convert: screenBox = compScreenPos - compPos + box. */
     private static boolean mouseHoverComp(Object comp) {
         java.awt.Point mp = mouseHudPos();
         if (mp == null) return false;
         try {
             if (!(comp instanceof necesse.gfx.forms.components.FormComponent)) return false;
-            java.util.List<java.awt.Rectangle> boxes =
-                ((necesse.gfx.forms.components.FormComponent) comp).getHitboxes();
+            necesse.gfx.forms.components.FormComponent fc =
+                (necesse.gfx.forms.components.FormComponent) comp;
+            java.awt.Point sp;
+            try { sp = fc.getScreenPosition(true); }
+            catch (Exception e) { return false; }
+            if (sp == null) return false;
+            int ox = 0, oy = 0;
+            try {
+                if (fc instanceof necesse.gfx.forms.position.FormPositionContainer) {
+                    necesse.gfx.forms.position.FormPositionContainer pc =
+                        (necesse.gfx.forms.position.FormPositionContainer) fc;
+                    ox = pc.getX();
+                    oy = pc.getY();
+                }
+            } catch (Exception ignored) {}
+            java.util.List<java.awt.Rectangle> boxes = fc.getHitboxes();
             if (boxes == null) return false;
-            for (java.awt.Rectangle r : boxes) {
-                if (r != null && r.contains(mp.x, mp.y)) return true;
+            for (java.awt.Rectangle b : boxes) {
+                if (b == null) continue;
+                if (mp.x >= sp.x - ox + b.x && mp.y >= sp.y - oy + b.y
+                    && mp.x < sp.x - ox + b.x + b.width
+                    && mp.y < sp.y - oy + b.y + b.height) {
+                    return true;
+                }
             }
         } catch (Exception ignored) {}
         return false;
