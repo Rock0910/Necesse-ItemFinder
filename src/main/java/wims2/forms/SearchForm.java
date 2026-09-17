@@ -393,7 +393,6 @@ public class SearchForm extends Form {
     private static void debugHovering(Object root, java.util.ArrayList<String> out) {
         if (root == null) return;
         final int[] counts = new int[3]; // visited, slots, recipes
-        final String[] firstRecipeBox = { null };
         try {
             walkTree(root, new java.util.HashSet<Object>(), comp -> {
                 if (out.size() >= 10) return;
@@ -427,19 +426,18 @@ public class SearchForm extends Form {
                         boolean isRecipe = comp instanceof necesse.gfx.forms.components.FormContainerRecipe;
                         if (isRecipe) {
                             counts[2]++;
-                            if (firstRecipeBox[0] == null) {
+                            if (counts[2] <= 8) {
+                                // Screen rect of every recipe: does any sit under the mouse?
                                 try {
                                     java.util.List<java.awt.Rectangle> boxes =
                                         ((necesse.gfx.forms.components.FormComponent) comp).getHitboxes();
                                     java.awt.Rectangle b = (boxes == null || boxes.isEmpty())
                                         ? null : boxes.get(0);
                                     java.awt.Point sp = null;
+                                    int cx = 0, cy = 0;
                                     try {
                                         sp = ((necesse.gfx.forms.components.FormComponent) comp)
                                             .getScreenPosition(true);
-                                    } catch (Exception ignored) {}
-                                    int cx = 0, cy = 0;
-                                    try {
                                         if (comp instanceof necesse.gfx.forms.position.FormPositionContainer) {
                                             necesse.gfx.forms.position.FormPositionContainer pc =
                                                 (necesse.gfx.forms.position.FormPositionContainer) comp;
@@ -447,8 +445,10 @@ public class SearchForm extends Form {
                                             cy = pc.getY();
                                         }
                                     } catch (Exception ignored) {}
-                                    firstRecipeBox[0] = "box=" + b + " screen=" + sp
-                                        + " pos=" + cx + "," + cy;
+                                    if (b != null && sp != null) {
+                                        out.add("R(" + (sp.x - cx + b.x) + ","
+                                            + (sp.y - cy + b.y) + ")");
+                                    }
                                 } catch (Exception ignored) {}
                             }
                         }
@@ -463,8 +463,7 @@ public class SearchForm extends Form {
             out.add("~visited=" + counts[0] + " slots=" + counts[1] + " recipes=" + counts[2]);
             try {
                 java.awt.Point mp = mouseHudPos();
-                out.add("~mouse=" + (mp == null ? "null" : mp.x + "," + mp.y)
-                    + " recipebox=" + firstRecipeBox[0]);
+                out.add("~mouse=" + (mp == null ? "null" : mp.x + "," + mp.y));
             } catch (Exception ignored) {}
         } catch (Exception ignored) {}
     }
