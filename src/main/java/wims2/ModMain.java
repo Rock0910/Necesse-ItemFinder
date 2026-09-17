@@ -36,9 +36,11 @@ public class ModMain {
                 new necesse.engine.localization.message.StaticMessage("Favorite icon");
         } catch (Exception ignored) {}
         // 1.3 ??ChatCommand 簽�?跟�??�差很�?（�?實�? getUsage/getAction/run/autocomplete...）�?
-        // v1 ?��?註�??��??�令，只??UI，避?�編譯地?�。v2 要�??��? WimsCommand.java??    }
+        // v1 UI only, no chat command to avoid signature issues.
+    }
 
     public void initResources() {
         ParticleSpawner.initResources();
     }
 }
+
