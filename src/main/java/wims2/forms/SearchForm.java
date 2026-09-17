@@ -309,20 +309,100 @@ public class SearchForm extends Form {
         applyFilter(true);
     }
 
-    /** U key: toggle favorite for the hovered icon button. */
-    private void favHovered() {
+    /** U key: toggle favorite for the hovered icon button. Returns true if handled. */
+    private boolean favHovered() {
         try {
             ItemIconButton found = findHoveredIcon(resultBox);
             if (found == null && panel != null) found = findHoveredIcon(panel.getBox());
-            if (found == null || found.getItem() == null || found.getItem().item == null) return;
-            String sid = found.getItem().item.getStringID();
+            if (found == null || found.getItem() == null || found.getItem().item == null) return false;
+            toggleFavItem(found.getItem());
+            return true;
+        } catch (Exception ignored) {}
+        return false;
+    }
+
+    /** Shared favorite toggle with status + panel refresh. */
+    private void toggleFavItem(necesse.inventory.InventoryItem target) {
+        if (target == null || target.item == null) return;
+        try {
+            String sid = target.item.getStringID();
             if (sid == null) return;
             boolean added = wims2.WimsData.toggleFavorite(sid);
             String name = sid;
-            try { name = found.getItem().getItemDisplayName(); } catch (Exception ignored) {}
+            try { name = target.getItemDisplayName(); } catch (Exception ignored) {}
             statusLabel.setText((added ? "+ Fav: " : "- Fav: ") + name);
             refreshPanel();
         } catch (Exception ignored) {}
+    }
+
+    /**
+     * U key fallback: favorite the item hovered in vanilla UI
+     * (backpack / toolbar / equipment / open container), or the one
+     * held on the mouse cursor.
+     */
+    static boolean favVanilla(MainGame mainGame) {
+        try {
+            if (mainGame == null || mainGame.formManager == null) return false;
+            necesse.gfx.forms.MainGameFormManager fm = mainGame.formManager;
+            necesse.inventory.InventoryItem target = null;
+            Object[] roots = { fm.inventory, fm.toolbar, fm.equipment, fm.focus };
+            for (Object root : roots) {
+                target = findHoveredSlot(root);
+                if (target != null) break;
+            }
+            if (target == null) {
+                try { target = fm.getItem(); } catch (Exception ignored) {} // held on cursor
+            }
+            if (target == null || target.item == null) return false;
+            String sid = null;
+            try { sid = target.item.getStringID(); } catch (Exception ignored) {}
+            if (sid == null) return false;
+            boolean added = wims2.WimsData.toggleFavorite(sid);
+            String name = sid;
+            try { name = target.getItemDisplayName(); } catch (Exception ignored) {}
+            final String msg = (added ? "+ Fav: " : "- Fav: ") + name;
+            try {
+                if (instance != null) {
+                    instance.statusLabel.setText(msg);
+                    instance.refreshPanel();
+                }
+            } catch (Exception ignored) {}
+            // Brief chat feedback when our window is closed (no status label visible)
+            try {
+                if (instance == null && mainGame.getClient() != null) {
+                    mainGame.getClient().chat(msg);
+                }
+            } catch (Exception ignored) {}
+            return true;
+        } catch (Exception ignored) {}
+        return false;
+    }
+
+    private static necesse.inventory.InventoryItem findHoveredSlot(Object comp) {
+        if (comp == null) return null;
+        try {
+            if (comp instanceof necesse.gfx.forms.components.containerSlot.FormContainerSlot) {
+                necesse.gfx.forms.components.containerSlot.FormContainerSlot slot =
+                    (necesse.gfx.forms.components.containerSlot.FormContainerSlot) comp;
+                if (slot.isHovering()) {
+                    try {
+                        necesse.inventory.container.slots.ContainerSlot cs = slot.getContainerSlot();
+                        if (cs != null && !cs.isClear()) return cs.getItem();
+                    } catch (Exception ignored) {}
+                }
+                return null;
+            }
+            if (comp instanceof necesse.gfx.forms.ComponentListContainer) {
+                try {
+                    for (Object child :
+                        ((necesse.gfx.forms.ComponentListContainer<?>) comp).getComponents()) {
+                        necesse.inventory.InventoryItem r = findHoveredSlot(child);
+                        if (r != null) return r;
+                    }
+                } catch (Exception ignored) {}
+            }
+        } catch (Exception ignored) {}
+        return null;
     }
 
     private static ItemIconButton findHoveredIcon(FormContentBox box) {
@@ -664,13 +744,6 @@ public class SearchForm extends Form {
                 TargetMarker.tick(mainGame.getClient());
                 instance.clampToScreen(window);
                 if (instance.panel != null) instance.panel.followMain(window);
-                // U key: favorite the hovered icon (skipped while typing text)
-                try {
-                    if (wims2.ModMain.favControl != null && wims2.ModMain.favControl.isPressed()
-                        && !necesse.gfx.forms.components.FormTypingComponent.isCurrentlyTyping()) {
-                        instance.favHovered();
-                    }
-                } catch (Exception ignored) {}
                 // Live distance refresh, twice a second
                 if (System.currentTimeMillis() - instance.lastDistRefresh > 500) {
                     instance.lastDistRefresh = System.currentTimeMillis();
@@ -679,6 +752,16 @@ public class SearchForm extends Form {
             }
         } catch (Exception ignored) {}
         if (mainGame.getClient() == null || mainGame.getClient().getPlayer() == null) return;
+        // U key (works with our window open or closed, skipped while typing):
+        // our icons first, else vanilla backpack/chest/cursor item.
+        try {
+            if (wims2.ModMain.favControl != null && wims2.ModMain.favControl.isPressed()
+                && !necesse.gfx.forms.components.FormTypingComponent.isCurrentlyTyping()) {
+                boolean done = false;
+                if (instance != null) done = instance.favHovered();
+                if (!done) favVanilla(mainGame);
+            }
+        } catch (Exception ignored) {}
         if (!mainGame.formManager.pauseMenu.isHidden()) {
             if (instance != null) instance.onCancel();
             return;
