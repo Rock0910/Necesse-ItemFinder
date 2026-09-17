@@ -2,3 +2,7 @@
 build/
 steam_appid.txt
 *.log
+
+# Not ours to publish (placeholder art from another mod); add your own before
+# uploading to the Steam Workshop.
+src/main/resources/preview.png
