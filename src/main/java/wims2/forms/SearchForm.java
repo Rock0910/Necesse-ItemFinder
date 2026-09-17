@@ -406,7 +406,7 @@ public class SearchForm extends Form {
         final java.util.ArrayList<String> under = new java.util.ArrayList<>();
         try {
             walkTree(root, new java.util.HashSet<Object>(), comp -> {
-                if (out.size() >= 14) return;
+                if (out.size() >= 30) return;
                 try {
                     counts[0]++;
                     // Any component under the mouse (identifies mystery hover targets)
