@@ -30,6 +30,7 @@ public class SearchForm extends Form {
 
     private static SearchForm instance;
     private static long lastFavPress;
+    private static long lastFindPress;
     private final MainGame mainGame;
     private FormTextInput textInput;
     private FormDropdownSelectionButton<String> categoryDropdown;
@@ -336,6 +337,60 @@ public class SearchForm extends Form {
             statusLabel.setText((added ? "+ Fav: " : "- Fav: ") + name);
             refreshPanel();
         } catch (Exception ignored) {}
+    }
+
+    /**
+     * Hovered item in OUR windows (results + side panel), or null.
+     * Used by U-favorite and P-find alike.
+     */
+    private necesse.inventory.InventoryItem hoveredModItem() {
+        try {
+            ItemIconButton found = findHoveredIcon(resultBox);
+            if (found == null && panel != null) found = findHoveredIcon(panel.getBox());
+            if (found == null || found.getItem() == null || found.getItem().item == null) {
+                return null;
+            }
+            return found.getItem();
+        } catch (Exception ignored) {}
+        return null;
+    }
+
+    /**
+     * Hovered vanilla item, quiet version for the P key
+     * (same scan as U-favorite, but no miss logging).
+     */
+    static necesse.inventory.InventoryItem vanillaHoveredItem(MainGame mainGame, TickManager tm) {
+        try {
+            if (mainGame == null || mainGame.formManager == null) return null;
+            necesse.gfx.forms.MainGameFormManager fm = mainGame.formManager;
+            java.util.ArrayList<Object> roots = vanillaRoots(fm);
+            try {
+                if (tm != null && mainGame.getClient() != null
+                    && mainGame.getClient().getPlayer() != null) {
+                    for (Object root : roots) {
+                        if (!(root instanceof necesse.gfx.forms.components.FormComponent)) continue;
+                        try {
+                            necesse.engine.input.InputEvent move =
+                                necesse.engine.input.InputEvent.MouseMoveEvent(
+                                    necesse.engine.input.Input.mousePos, tm);
+                            ((necesse.gfx.forms.components.FormComponent) root)
+                                .handleInputEvent(move, tm, mainGame.getClient().getPlayer());
+                        } catch (Exception ignored) {}
+                    }
+                }
+            } catch (Exception ignored) {}
+            necesse.inventory.InventoryItem target = null;
+            try { target = configRowHit(fm); } catch (Exception ignored) {}
+            if (target == null) {
+                for (Object root : vanillaRoots(fm)) {
+                    target = findHoveredSlot(root);
+                    if (target != null) break;
+                }
+            }
+            if (target == null || target.item == null) return null;
+            return target;
+        } catch (Exception ignored) {}
+        return null;
     }
 
     /**
@@ -1469,6 +1524,34 @@ public class SearchForm extends Form {
                 boolean done = false;
                 if (instance != null) done = instance.favHovered();
                 if (!done) favVanilla(mainGame, tm);
+            }
+        } catch (Exception ignored) {}
+        // P key: search the hovered item (our icons first, else vanilla).
+        // Opens our window if closed. Debounced like U.
+        try {
+            if (wims2.ModMain.findControl != null && wims2.ModMain.findControl.isPressed()
+                && !necesse.gfx.forms.components.FormTypingComponent.isCurrentlyTyping()
+                && System.currentTimeMillis() - lastFindPress > 150) {
+                lastFindPress = System.currentTimeMillis();
+                necesse.inventory.InventoryItem target = null;
+                if (instance != null) {
+                    try { target = instance.hoveredModItem(); } catch (Exception ignored) {}
+                }
+                if (target == null) {
+                    try { target = vanillaHoveredItem(mainGame, tm); } catch (Exception ignored) {}
+                }
+                if (target != null && target.item != null) {
+                    String sid = null;
+                    try { sid = target.item.getStringID(); } catch (Exception ignored) {}
+                    if (sid != null) {
+                        if (instance == null) {
+                            instance = (SearchForm) mainGame.formManager
+                                .addComponent(new SearchForm(mainGame));
+                            instance.restorePosition(window);
+                        }
+                        instance.searchFromHistory(sid);
+                    }
+                }
             }
         } catch (Exception ignored) {}
         if (!mainGame.formManager.pauseMenu.isHidden()) {

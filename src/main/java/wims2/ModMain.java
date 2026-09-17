@@ -9,6 +9,7 @@ public class ModMain {
 
     public static Control openSearchControl;
     public static Control favControl;
+    public static Control findControl;
 
     public void init() {
     }
@@ -34,6 +35,14 @@ public class ModMain {
         try {
             favControl.tooltip =
                 new necesse.engine.localization.message.StaticMessage("Favorite icon");
+        } catch (Exception ignored) {}
+        // Hovered-item search: same sources as favorites, opens the
+        // window and searches the hovered item. Default P, rebindable.
+        findControl = Control.addModControl(new Control(80, "itemfinderfind",
+            new necesse.engine.localization.message.StaticMessage("ItemFinder find")));
+        try {
+            findControl.tooltip =
+                new necesse.engine.localization.message.StaticMessage("Search hovered item");
         } catch (Exception ignored) {}
         // 1.3 ??ChatCommand 簽�?跟�??�差很�?（�?實�? getUsage/getAction/run/autocomplete...）�?
         // v1 UI only, no chat command to avoid signature issues.
