@@ -440,7 +440,9 @@ public class SearchForm extends Form {
         final java.util.ArrayList<String> under = new java.util.ArrayList<>();
         try {
             walkTree(root, new java.util.HashSet<Object>(), comp -> {
-                if (out.size() >= 30) return;
+                // No global cap here: out is shared across roots and an early
+                // cap blinds later roots (their counts freeze at zero).
+                // Per-type caps live at each add site (under: 8, R: 8).
                 try {
                     counts[0]++;
                     String cn = comp.getClass().getSimpleName();
