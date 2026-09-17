@@ -350,7 +350,20 @@ public class SearchForm extends Form {
                 target = findHoveredSlot(root);
                 if (target != null) break;
             }
-            if (target == null) return false;
+            if (target == null || target.item == null) {
+                try {
+                    java.util.ArrayList<Object> dbg = vanillaRoots(fm);
+                    StringBuilder sb = new StringBuilder("ItemFinder: U-fav found nothing, roots=");
+                    sb.append(dbg.size()).append(" [");
+                    for (int i = 0; i < Math.min(12, dbg.size()); i++) {
+                        if (i > 0) sb.append(',');
+                        sb.append(dbg.get(i).getClass().getSimpleName());
+                    }
+                    sb.append(']');
+                    System.out.println(sb.toString());
+                } catch (Exception ignored) {}
+                return false;
+            }
             String sid = null;
             try { sid = target.item.getStringID(); } catch (Exception ignored) {}
             if (sid == null) return false;
@@ -375,6 +388,16 @@ public class SearchForm extends Form {
     private static java.util.ArrayList<Object> vanillaRoots(
         necesse.gfx.forms.MainGameFormManager fm) {
         java.util.ArrayList<Object> roots = new java.util.ArrayList<>();
+        // Explicit core roots first: open-container field is typed as the
+        // ContainerComponent interface (not FormComponent), so reflection
+        // below would skip it. Same for any other interface-typed fields.
+        try {
+            if (fm.inventory != null) roots.add(fm.inventory);
+            if (fm.toolbar != null) roots.add(fm.toolbar);
+            if (fm.equipment != null) roots.add(fm.equipment);
+            if (fm.focus != null) roots.add(fm.focus);
+            if (fm.crafting != null) roots.add(fm.crafting);
+        } catch (Exception ignored) {}
         try {
             if (vanillaRootFields == null) {
                 java.util.ArrayList<java.lang.reflect.Field> all =
@@ -386,6 +409,7 @@ public class SearchForm extends Form {
                             if (java.lang.reflect.Modifier.isStatic(f.getModifiers())) continue;
                             Class<?> t = f.getType();
                             if (necesse.gfx.forms.components.FormComponent.class.isAssignableFrom(t)
+                                || necesse.gfx.forms.ContainerComponent.class.isAssignableFrom(t)
                                 || java.util.Collection.class.isAssignableFrom(t)) {
                                 f.setAccessible(true);
                                 all.add(f);
