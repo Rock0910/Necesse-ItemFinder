@@ -696,8 +696,9 @@ public class SearchForm extends Form {
     }
 
     /** Manual hover test: current mouse pos vs component hitboxes.
-     * Hitboxes live in PARENT space (parents translate events down), so
-     * convert: screenBox = compScreenPos - compPos + box. */
+     * Hitboxes live in PARENT space (screenBox = compScreen - compPos + box).
+     * Tries getScreenPosition both ways: scrolled ContentBoxes shift children,
+     * and only one variant accounts for ancestor scroll. */
     private static boolean mouseHoverComp(Object comp) {
         java.awt.Point mp = mouseHudPos();
         if (mp == null) return false;
@@ -705,10 +706,6 @@ public class SearchForm extends Form {
             if (!(comp instanceof necesse.gfx.forms.components.FormComponent)) return false;
             necesse.gfx.forms.components.FormComponent fc =
                 (necesse.gfx.forms.components.FormComponent) comp;
-            java.awt.Point sp;
-            try { sp = fc.getScreenPosition(true); }
-            catch (Exception e) { return false; }
-            if (sp == null) return false;
             int ox = 0, oy = 0;
             try {
                 if (fc instanceof necesse.gfx.forms.position.FormPositionContainer) {
@@ -720,12 +717,18 @@ public class SearchForm extends Form {
             } catch (Exception ignored) {}
             java.util.List<java.awt.Rectangle> boxes = fc.getHitboxes();
             if (boxes == null) return false;
+            java.awt.Point[] sps = new java.awt.Point[2];
+            try { sps[0] = fc.getScreenPosition(true); } catch (Exception ignored) {}
+            try { sps[1] = fc.getScreenPosition(false); } catch (Exception ignored) {}
             for (java.awt.Rectangle b : boxes) {
                 if (b == null) continue;
-                if (mp.x >= sp.x - ox + b.x && mp.y >= sp.y - oy + b.y
-                    && mp.x < sp.x - ox + b.x + b.width
-                    && mp.y < sp.y - oy + b.y + b.height) {
-                    return true;
+                for (java.awt.Point sp : sps) {
+                    if (sp == null) continue;
+                    int sx = sp.x - ox + b.x, sy = sp.y - oy + b.y;
+                    if (mp.x >= sx && mp.y >= sy
+                        && mp.x < sx + b.width && mp.y < sy + b.height) {
+                        return true;
+                    }
                 }
             }
         } catch (Exception ignored) {}
@@ -820,21 +823,28 @@ public class SearchForm extends Form {
                     int cols = Math.max(1, width / elementWidth);
                     int xPad = (width % elementWidth) / 2;
                     java.util.List<?> els = listElements(list);
-                    java.awt.Point lsp = null;
+                    java.awt.Point[] lsps = new java.awt.Point[2];
                     try {
-                        lsp = ((necesse.gfx.forms.components.FormComponent) list)
+                        lsps[0] = ((necesse.gfx.forms.components.FormComponent) list)
                             .getScreenPosition(true);
                     } catch (Exception ignored) {}
-                    if (els != null && lsp != null) {
-                        for (int i = 0; i < els.size(); i++) {
-                            int row = i / cols;
-                            int ex = (i - row * cols) * elementWidth + xPad;
-                            int ey = row * elementHeight - scroll + 16;
-                            if (mouse.x >= lsp.x + ex && mouse.y >= lsp.y + ey
-                                && mouse.x < lsp.x + ex + elementWidth
-                                && mouse.y < lsp.y + ey + elementHeight) {
-                                necesse.inventory.InventoryItem item = elementItem(els.get(i));
-                                if (item != null) return item;
+                    try {
+                        lsps[1] = ((necesse.gfx.forms.components.FormComponent) list)
+                            .getScreenPosition(false);
+                    } catch (Exception ignored) {}
+                    if (els != null) {
+                        for (java.awt.Point lsp : lsps) {
+                            if (lsp == null) continue;
+                            for (int i = 0; i < els.size(); i++) {
+                                int row = i / cols;
+                                int ex = (i - row * cols) * elementWidth + xPad;
+                                int ey = row * elementHeight - scroll + 16;
+                                if (mouse.x >= lsp.x + ex && mouse.y >= lsp.y + ey
+                                    && mouse.x < lsp.x + ex + elementWidth
+                                    && mouse.y < lsp.y + ey + elementHeight) {
+                                    necesse.inventory.InventoryItem item = elementItem(els.get(i));
+                                    if (item != null) return item;
+                                }
                             }
                         }
                         return null;
