@@ -447,6 +447,13 @@ public class SearchForm extends Form {
                     counts[0]++;
                     String cn = comp.getClass().getSimpleName();
                     if (kinds.size() < 40) kinds.add(cn);
+                    if (comp instanceof necesse.gfx.forms.FormSwitcherTyped) {
+                        try {
+                            Object cur = ((necesse.gfx.forms.FormSwitcherTyped<?>) comp).getCurrent();
+                            out.add("Switch:" + cn + "->"
+                                + (cur == null ? "null" : cur.getClass().getSimpleName()));
+                        } catch (Exception ignored) {}
+                    }
                     // Any component under the mouse (identifies mystery hover targets).
                     // Tests both hitbox interpretations: parent-space (minus pos)
                     // and component-local (plus pos), to learn the true convention.
