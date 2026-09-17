@@ -32,6 +32,11 @@ public class WimsData {
     public static synchronized void load() {
         if (loaded) return;
         loaded = true;
+        // One-time migration from pre-rebrand wims2* files, so old
+        // favorites/history survive the rename instead of looking lost.
+        migrate("wims2fav.cfg", "itemfinderfav.cfg");
+        migrate("wims2histitems.cfg", "itemfinderhistitems.cfg");
+        migrate("wims2pos.cfg", "itemfinderpos.cfg");
         String hf = cfg("itemfinderhistitems.cfg");
         if (hf != null) {
             try (BufferedReader br = new BufferedReader(new InputStreamReader(
@@ -54,6 +59,27 @@ public class WimsData {
                 }
             } catch (Exception ignored) {}
         }
+        System.out.println("ItemFinder: loaded " + history.size()
+            + " history, " + favorites.size() + " favorites.");
+    }
+
+    /** Copy old file to new path once, if the new one is missing/empty. */
+    private static void migrate(String oldName, String newName) {
+        try {
+            String o = cfg(oldName), n = cfg(newName);
+            if (o == null || n == null || o.equals(n)) return;
+            java.io.File of = new java.io.File(o);
+            java.io.File nf = new java.io.File(n);
+            if (!of.exists() || of.length() == 0) return;
+            if (nf.exists() && nf.length() > 0) return; // new data wins
+            try (java.io.FileInputStream in = new java.io.FileInputStream(of);
+                 java.io.FileOutputStream out = new java.io.FileOutputStream(nf)) {
+                byte[] buf = new byte[4096];
+                int r;
+                while ((r = in.read(buf)) > 0) out.write(buf, 0, r);
+            }
+            System.out.println("ItemFinder: migrated " + oldName + " -> " + newName);
+        } catch (Exception ignored) {}
     }
 
     /** Record a viewed item (most recent first, capped). Returns true if list changed. */
@@ -79,12 +105,7 @@ public class WimsData {
     }
 
     private static synchronized void saveHistory() {
-        String hf = cfg("itemfinderhistitems.cfg");
-        if (hf == null) return;
-        try (PrintWriter pw = new PrintWriter(new OutputStreamWriter(
-            new FileOutputStream(hf), StandardCharsets.UTF_8))) {
-            for (String s : history) pw.println(s);
-        } catch (Exception ignored) {}
+        writeLines(cfg("itemfinderhistitems.cfg"), history);
     }
 
     /** Toggle favorite. Returns true if now favorited. */
@@ -114,12 +135,32 @@ public class WimsData {
     }
 
     private static synchronized void saveFavorites() {
-        String ff = cfg("itemfinderfav.cfg");
-        if (ff == null) return;
-        try (PrintWriter pw = new PrintWriter(new OutputStreamWriter(
-            new FileOutputStream(ff), StandardCharsets.UTF_8))) {
-            for (String s : favorites) pw.println(s);
-        } catch (Exception ignored) {}
+        writeLines(cfg("itemfinderfav.cfg"), new ArrayList<>(favorites));
+    }
+
+    /**
+     * Atomic write (tmp + rename) so a crash mid-save can never leave
+     * a truncated empty file behind.
+     */
+    private static void writeLines(String path, java.util.Collection<String> lines) {
+        if (path == null) return;
+        try {
+            java.io.File tmp = new java.io.File(path + ".tmp");
+            try (PrintWriter pw = new PrintWriter(new OutputStreamWriter(
+                new FileOutputStream(tmp), StandardCharsets.UTF_8))) {
+                for (String s : lines) pw.println(s);
+            }
+            java.io.File dst = new java.io.File(path);
+            if (!tmp.renameTo(dst)) {
+                // Fallback for filesystems where rename fails: direct overwrite
+                try (PrintWriter pw = new PrintWriter(new OutputStreamWriter(
+                    new FileOutputStream(dst), StandardCharsets.UTF_8))) {
+                    for (String s : lines) pw.println(s);
+                }
+            }
+        } catch (Exception e) {
+            System.out.println("ItemFinder: save failed for " + path + " (" + e + ")");
+        }
     }
 
     /** Resolve a stored stringID to a displayable InventoryItem (null if unknown). */
