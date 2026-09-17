@@ -392,12 +392,17 @@ public class SearchForm extends Form {
     /** Debug: list components currently reporting hover, with item presence. */
     private static void debugHovering(Object root, java.util.ArrayList<String> out) {
         if (root == null) return;
+        final int[] counts = new int[3]; // visited, slots, recipes
         try {
             walkTree(root, new java.util.HashSet<Object>(), comp -> {
                 if (out.size() >= 10) return;
                 try {
+                    counts[0]++;
                     if (comp instanceof necesse.gfx.forms.components.FormContainerRecipe
                         || comp instanceof necesse.gfx.forms.components.containerSlot.FormContainerSlot) {
+                        boolean isRecipe = comp instanceof necesse.gfx.forms.components.FormContainerRecipe;
+                        if (isRecipe) counts[2]++;
+                        else counts[1]++;
                         if (isHoveringComp(comp)) {
                             out.add(comp.getClass().getSimpleName() + ":"
                                 + (slotItem(comp) != null ? "item" : "empty"));
@@ -405,6 +410,7 @@ public class SearchForm extends Form {
                     }
                 } catch (Exception ignored) {}
             });
+            out.add("~visited=" + counts[0] + " slots=" + counts[1] + " recipes=" + counts[2]);
         } catch (Exception ignored) {}
     }
 
