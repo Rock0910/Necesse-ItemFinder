@@ -38,14 +38,14 @@ public class SidePanel extends Form {
         FormFlow flow = new FormFlow(5);
 
         int ty = flow.next();
-        titleLabel = new FormFairTypeLabel("History", 5, ty);
+        titleLabel = new FormFairTypeLabel(wims2.L.t("history"), 5, ty);
         titleLabel.setFontOptions(new FontOptions(18));
         addComponent(titleLabel);
         try {
             necesse.gfx.ui.GameInterfaceStyle uiStyle = necesse.engine.Settings.UI;
             FormContentIconButton x = new FormContentIconButton(
                 getWidth() - 46, ty, 36, FormInputSize.SIZE_32, ButtonColor.BASE,
-                uiStyle.button_cross, new StaticMessage("Close panel"));
+                uiStyle.button_cross, wims2.L.m("close"));
             addComponent(x);
             x.onClicked(e -> hidePanel());
         } catch (Exception ignored) {}
@@ -58,13 +58,13 @@ public class SidePanel extends Form {
 
         int pr = flow.next();
         FormTextButton prev = new FormTextButton(
-            "Prev", 5, pr, getWidth() / 2 - 10, FormInputSize.SIZE_32, ButtonColor.BASE);
+            wims2.L.t("prev"), 5, pr, getWidth() / 2 - 10, FormInputSize.SIZE_32, ButtonColor.BASE);
         addComponent(prev);
         prev.onClicked(e -> {
             if (page > 0) { page--; render(); }
         });
         FormTextButton next = new FormTextButton(
-            "Next", getWidth() / 2 + 5, pr, getWidth() / 2 - 10, FormInputSize.SIZE_32, ButtonColor.BASE);
+            wims2.L.t("next"), getWidth() / 2 + 5, pr, getWidth() / 2 - 10, FormInputSize.SIZE_32, ButtonColor.BASE);
         addComponent(next);
         next.onClicked(e -> {
             if (page < totalPages() - 1) { page++; render(); }
@@ -105,10 +105,12 @@ public class SidePanel extends Form {
         ids.clear();
         try {
             if (panelMode == PanelMode.HISTORY) {
-                titleLabel.setText("History (" + wims2.WimsData.getHistoryItems().size() + ")");
+                titleLabel.setText(wims2.L.msg("panelhist", "n",
+                    String.valueOf(wims2.WimsData.getHistoryItems().size())));
                 ids.addAll(wims2.WimsData.getHistoryItems());
             } else {
-                titleLabel.setText("Favorites (" + wims2.WimsData.getFavorites().size() + ")");
+                titleLabel.setText(wims2.L.msg("panelfav", "n",
+                    String.valueOf(wims2.WimsData.getFavorites().size())));
                 ids.addAll(wims2.WimsData.getFavorites());
             }
         } catch (Exception ignored) {}
@@ -120,7 +122,7 @@ public class SidePanel extends Form {
         if (panelMode == PanelMode.HISTORY) {
             try {
                 FormTextButton clear = new FormTextButton(
-                    "Clear history", 0, y, getWidth() - 10, FormInputSize.SIZE_32, ButtonColor.BASE);
+                    wims2.L.t("clearhistory"), 0, y, getWidth() - 10, FormInputSize.SIZE_32, ButtonColor.BASE);
                 box.addComponent(clear);
                 clear.onClicked(e -> {
                     wims2.WimsData.clearHistory();
@@ -145,7 +147,7 @@ public class SidePanel extends Form {
                 ItemIconButton ib = new ItemIconButton(cx, iy, FormInputSize.SIZE_32,
                     ButtonColor.BASE, inv,
                     necesse.engine.Settings.UI.button_search_24,
-                    new StaticMessage("Search"));
+                    wims2.L.m("scan"));
                 box.addComponent(ib);
                 ib.onClicked(e -> {
                     try { main.searchFromHistory(sid); } catch (Exception ignored) {}
@@ -157,8 +159,8 @@ public class SidePanel extends Form {
         if (ids.isEmpty()) {
             try {
                 String msg = panelMode == PanelMode.HISTORY
-                    ? "Click icons to record."
-                    : "Hover icon + U to add.";
+                    ? wims2.L.t("sidehistempty")
+                    : wims2.L.t("sidefavempty");
                 FormFairTypeLabel empty = new FormFairTypeLabel(msg, 0, y);
                 empty.setFontOptions(new FontOptions(14));
                 box.addComponent(empty);

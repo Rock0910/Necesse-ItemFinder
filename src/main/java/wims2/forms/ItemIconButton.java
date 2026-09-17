@@ -57,7 +57,7 @@ public class ItemIconButton extends FormContentIconButton {
             } catch (Exception ignored) {}
             try {
                 String sid = item.item.getStringID();
-                if (sid != null && !sid.isEmpty()) addLine("ID: " + sid);
+                if (sid != null && !sid.isEmpty()) addLine(wims2.L.t("cardid") + " " + sid);
             } catch (Exception ignored) {}
             try {
                 necesse.engine.localization.message.GameMessage loc =
@@ -65,7 +65,7 @@ public class ItemIconButton extends FormContentIconButton {
                 if (loc != null) {
                     String en = loc.translateDebug(
                         necesse.engine.localization.Localization.English);
-                    if (en != null && !en.isEmpty()) addLine("EN: " + en);
+                    if (en != null && !en.isEmpty()) addLine(wims2.L.t("carden") + " " + en);
                 }
             } catch (Exception ignored) {}
             try {
@@ -78,7 +78,7 @@ public class ItemIconButton extends FormContentIconButton {
                     } catch (Exception ex) {
                         path = c.stringID;
                     }
-                    if (path != null && !path.isEmpty()) addLine("Category: " + path);
+                    if (path != null && !path.isEmpty()) addLine(wims2.L.t("cardcat") + " " + path);
                 }
             } catch (Exception ignored) {}
         } catch (Exception ignored) {}

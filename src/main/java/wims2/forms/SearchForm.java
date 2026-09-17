@@ -56,17 +56,17 @@ public class SearchForm extends Form {
         addComponent(title);
         FormContentIconButton histBtn = new FormContentIconButton(
             getWidth() - 118, titleY, 36, FormInputSize.SIZE_32, ButtonColor.BASE,
-            uiStyle.rotate_counterclockwise_32, new StaticMessage("History"));
+            uiStyle.rotate_counterclockwise_32, wims2.L.m("history"));
         addComponent(histBtn);
         histBtn.onClicked(e -> { defocusInput(); togglePanel(SidePanel.PanelMode.HISTORY); });
         FormContentIconButton favBtn = new FormContentIconButton(
             getWidth() - 82, titleY, 36, FormInputSize.SIZE_32, ButtonColor.BASE,
-            uiStyle.firework_star, new StaticMessage("Favorites"));
+            uiStyle.firework_star, wims2.L.m("favorites"));
         addComponent(favBtn);
         favBtn.onClicked(e -> { defocusInput(); togglePanel(SidePanel.PanelMode.FAVS); });
         FormContentIconButton closeBtn = new FormContentIconButton(
             getWidth() - 46, titleY, 36, FormInputSize.SIZE_32, ButtonColor.BASE,
-            uiStyle.button_cross, new StaticMessage("Close"));
+            uiStyle.button_cross, wims2.L.m("close"));
         addComponent(closeBtn);
         closeBtn.onClicked(e -> onCancel());
         // Title text is shorter than the 32px icon buttons: extra padding
@@ -77,18 +77,18 @@ public class SearchForm extends Form {
         int inputY = flow.next();
         textInput = new FormTextInput(5, inputY, FormInputSize.SIZE_32, 350, 200, 50);
         addComponent(textInput);
-        textInput.placeHolder = new StaticMessage("copper, bread, potion...");
+        textInput.placeHolder = wims2.L.m("placeholder");
         textInput.onSubmit(e -> { defocusInput(); applyFilter(true); });
         // Clicking anywhere outside the box drops focus (default is false)
         try { textInput.allowUsedMouseClickStopTyping = true; } catch (Exception ignored) {}
         FormContentIconButton scanBtn = new FormContentIconButton(
             360, inputY, FormInputSize.SIZE_32, ButtonColor.BASE,
-            uiStyle.button_search_24, new StaticMessage("Scan"));
+            uiStyle.button_search_24, wims2.L.m("scan"));
         addComponent(scanBtn);
         scanBtn.onClicked(e -> { defocusInput(); resnapshot(); });
         FormContentIconButton clearBtn = new FormContentIconButton(
             400, inputY, FormInputSize.SIZE_32, ButtonColor.BASE,
-            uiStyle.button_clear, new StaticMessage("Clear"));
+            uiStyle.button_clear, wims2.L.m("clear"));
         addComponent(clearBtn);
         clearBtn.onClicked(e -> { defocusInput(); clearTextbox(); });
         flow.nextY(textInput, 5);
@@ -96,25 +96,25 @@ public class SearchForm extends Form {
         // Category + Range + Reset on the same row
         int dropY = flow.next();
         categoryDropdown = new FormDropdownSelectionButton<String>(5, dropY, FormInputSize.SIZE_32,
-            ButtonColor.BASE, 165, new StaticMessage("Category"));
+            ButtonColor.BASE, 165, wims2.L.m("category"));
         addComponent(categoryDropdown);
-        categoryDropdown.options.add("all", new StaticMessage("All categories"));
+        categoryDropdown.options.add("all", wims2.L.m("allcat"));
         try {
             for (ItemCategory c : ItemCategory.masterManager.masterCategory.getChildren()) {
                 GameMessage name = c.displayName != null ? c.displayName : new StaticMessage(c.stringID);
                 categoryDropdown.options.add(c.stringID, name);
             }
         } catch (Exception ignored) {}
-        categoryDropdown.setSelected("all", new StaticMessage("All categories"));
+        categoryDropdown.setSelected("all", wims2.L.m("allcat"));
         categoryDropdown.onSelected(e -> { defocusInput(); applyFilter(true); });
         radiusDropdown = new FormDropdownSelectionButton<Integer>(175, dropY, FormInputSize.SIZE_32,
-            ButtonColor.BASE, 135, new StaticMessage("Range"));
+            ButtonColor.BASE, 135, wims2.L.m("range"));
         addComponent(radiusDropdown);
-        radiusDropdown.options.add(16, new StaticMessage("16 tiles"));
-        radiusDropdown.options.add(32, new StaticMessage("32 tiles"));
-        radiusDropdown.options.add(64, new StaticMessage("64 tiles"));
-        radiusDropdown.options.add(128, new StaticMessage("128 tiles"));
-        radiusDropdown.setSelected(16, new StaticMessage("16 tiles"));
+        radiusDropdown.options.add(16, wims2.L.m("r16"));
+        radiusDropdown.options.add(32, wims2.L.m("r32"));
+        radiusDropdown.options.add(64, wims2.L.m("r64"));
+        radiusDropdown.options.add(128, wims2.L.m("r128"));
+        radiusDropdown.setSelected(16, wims2.L.m("r16"));
         radiusDropdown.onSelected(e -> {
             defocusInput();
             try {
@@ -126,13 +126,13 @@ public class SearchForm extends Form {
             } catch (Exception ignored) {}
         });
         FormTextButton resetBtn = new FormTextButton(
-            "Reset", 315, dropY, 130, FormInputSize.SIZE_32, ButtonColor.BASE);
+            wims2.L.t("reset"), 315, dropY, 130, FormInputSize.SIZE_32, ButtonColor.BASE);
         addComponent(resetBtn);
         resetBtn.onClicked(e -> { defocusInput(); resetDropdowns(); });
         flow.nextY(categoryDropdown, 5);
 
         // Status + results
-        statusLabel = new FormFairTypeLabel("Loading...", 5, 0);
+        statusLabel = new FormFairTypeLabel("...", 5, 0);
         statusLabel.setFontOptions(new FontOptions(16));
         addComponent(statusLabel);
         flow.nextY(statusLabel, 5);
@@ -144,7 +144,7 @@ public class SearchForm extends Form {
 
         // One-line affordance hint above the pager
         FormFairTypeLabel iconTip = new FormFairTypeLabel(
-            "Click: mark. U: favorite.", 5, 0);
+            wims2.L.t("tip"), 5, 0);
         iconTip.setFontOptions(new FontOptions(14));
         addComponent(iconTip);
         flow.nextY(iconTip, 5);
@@ -153,14 +153,14 @@ public class SearchForm extends Form {
         // scrollY) proved unreliable here, paging just rebuilds the list.
         int pageRowY = flow.next();
         FormTextButton prevBtn = new FormTextButton(
-            "Prev", 5, pageRowY, getWidth() / 2 - 10, FormInputSize.SIZE_32, ButtonColor.BASE);
+            wims2.L.t("prev"), 5, pageRowY, getWidth() / 2 - 10, FormInputSize.SIZE_32, ButtonColor.BASE);
         addComponent(prevBtn);
         prevBtn.onClicked(e -> {
             defocusInput();
             if (page > 0) { page--; showPage(); }
         });
         FormTextButton nextBtn = new FormTextButton(
-            "Next", getWidth() / 2 + 5, pageRowY, getWidth() / 2 - 10, FormInputSize.SIZE_32, ButtonColor.BASE);
+            wims2.L.t("next"), getWidth() / 2 + 5, pageRowY, getWidth() / 2 - 10, FormInputSize.SIZE_32, ButtonColor.BASE);
         addComponent(nextBtn);
         nextBtn.onClicked(e -> {
             defocusInput();
@@ -200,7 +200,7 @@ public class SearchForm extends Form {
     /** Reset: dropdowns back to defaults (category All, radius 16) */
     private void resetDropdowns() {
         try {
-            categoryDropdown.setSelected("all", new StaticMessage("All categories"));
+            categoryDropdown.setSelected("all", wims2.L.m("allcat"));
         } catch (Exception ignored) {}
         boolean radiusChanged = false;
         try {
@@ -208,7 +208,7 @@ public class SearchForm extends Form {
             radiusChanged = r == null || r != 16;
             if (radiusChanged) {
                 currentRadius = 16;
-                radiusDropdown.setSelected(16, new StaticMessage("16 tiles"));
+                radiusDropdown.setSelected(16, wims2.L.m("r16"));
             }
         } catch (Exception ignored) {}
         // Radius change means the snapshot no longer matches: re-scan.
@@ -247,8 +247,8 @@ public class SearchForm extends Form {
             } catch (Exception ignored) {}
         }
         if (m == null) {
-            statusBase = snapshot.entries.size()
-                + " containers. Type keyword or pick category.";
+            statusBaseMsg = wims2.L.msg("statusidle", "n",
+                String.valueOf(snapshot.entries.size()));
             currentHits.clear();
             page = 0;
             resultBox.clearComponents();
@@ -258,7 +258,10 @@ public class SearchForm extends Form {
         }
         // A real search is always shown in the main (results) list
         List<SearchEngine.Hit> hits = SearchEngine.filter(snapshot, m, spawnParticles);
-        statusBase = currentRadius + " tiles: " + hits.size() + "/" + snapshot.entries.size() + ".";
+        statusBaseMsg = wims2.L.msg("statusfound",
+            "r", String.valueOf(currentRadius),
+            "h", String.valueOf(hits.size()),
+            "n", String.valueOf(snapshot.entries.size()));
         refreshResultBox(hits);
     }
 
@@ -312,7 +315,7 @@ public class SearchForm extends Form {
         } catch (Exception ignored) {}
         try { textInput.setText(stringID); } catch (Exception ignored) {}
         try {
-            categoryDropdown.setSelected("all", new StaticMessage("All categories"));
+            categoryDropdown.setSelected("all", wims2.L.m("allcat"));
         } catch (Exception ignored) {}
         applyFilter(true);
     }
@@ -338,7 +341,10 @@ public class SearchForm extends Form {
             boolean added = wims2.WimsData.toggleFavorite(sid);
             String name = sid;
             try { name = target.getItemDisplayName(); } catch (Exception ignored) {}
-            statusLabel.setText((added ? "+ Fav: " : "- Fav: ") + name);
+            try {
+                statusLabel.setText(wims2.L.msg(added ? "statusfavadd" : "statusfavremove",
+                    "name", name));
+            } catch (Exception ignored) {}
             refreshPanel();
         } catch (Exception ignored) {}
     }
@@ -493,7 +499,13 @@ public class SearchForm extends Form {
             boolean added = wims2.WimsData.toggleFavorite(sid);
             String name = sid;
             try { name = target.getItemDisplayName(); } catch (Exception ignored) {}
-            final String msg = (added ? "+ Fav: " : "- Fav: ") + name;
+            final String msg;
+            try {
+                msg = wims2.L.msg(added ? "statusfavadd" : "statusfavremove",
+                    "name", name).translate();
+            } catch (Exception e) {
+                return false;
+            }
             System.out.println("ItemFinder: U-fav " + msg + " [" + sid + "]");
             try {
                 if (instance != null) {
@@ -1176,11 +1188,18 @@ public class SearchForm extends Form {
         return null;
     }
 
-    private String statusBase = "";
+    private necesse.engine.localization.message.GameMessage statusBaseMsg =
+        new necesse.engine.localization.message.StaticMessage("");
     private void updateStatus() {
         try {
-            String s = statusBase;
-            if (totalPages() > 1) s += " Page " + (page + 1) + "/" + totalPages();
+            String s = "";
+            try { s = statusBaseMsg.translate(); } catch (Exception ignored) {}
+            if (totalPages() > 1) {
+                try {
+                    s += wims2.L.msg("page", "p", String.valueOf(page + 1),
+                        "t", String.valueOf(totalPages())).translate();
+                } catch (Exception ignored) {}
+            }
             statusLabel.setText(s);
         } catch (Exception ignored) {}
     }
@@ -1211,7 +1230,10 @@ public class SearchForm extends Form {
             boolean added = wims2.WimsData.toggleFavorite(sid);
             String name = sid;
             try { name = sample.getItemDisplayName(); } catch (Exception ignored) {}
-            statusLabel.setText((added ? "+ Fav: " : "- Fav: ") + name);
+            try {
+                statusLabel.setText(wims2.L.msg(added ? "statusfavadd" : "statusfavremove",
+                    "name", name));
+            } catch (Exception ignored) {}
             refreshPanel();
         } catch (Exception ignored) {}
     }
@@ -1245,7 +1267,7 @@ public class SearchForm extends Form {
                         ItemIconButton ib = new ItemIconButton(x, y, FormInputSize.SIZE_32,
                             ButtonColor.BASE, sample,
                             necesse.engine.Settings.UI.button_search_24,
-                            new StaticMessage("Locate"));
+                            wims2.L.m("scan"));
                         resultBox.addComponent(ib);
                         ib.onClicked(e -> searchExact(sample));
                     } else {
@@ -1271,7 +1293,7 @@ public class SearchForm extends Form {
                     ItemIconButton cb = new ItemIconButton(x + 76, y, FormInputSize.SIZE_32,
                         ButtonColor.BASE, cItem,
                         necesse.engine.Settings.UI.button_search_24,
-                        new StaticMessage("Ping"));
+                        wims2.L.m("ping"));
                     resultBox.addComponent(cb);
                     cb.onClicked(e -> pingHit(ch));
                 } else {
@@ -1285,7 +1307,7 @@ public class SearchForm extends Form {
                 label.setMaxWidth(boxW - x - 70); // leave room for Ping button
                 resultBox.addComponent(label);
                 FormTextButton ping = new FormTextButton(
-                    "Ping", boxW - 58, y + 4, 54, FormInputSize.SIZE_32, ButtonColor.BASE);
+                    wims2.L.t("ping"), boxW - 58, y + 4, 54, FormInputSize.SIZE_32, ButtonColor.BASE);
                 resultBox.addComponent(ping);
                 final SearchEngine.Hit fh = h;
                 ping.onClicked(e -> pingHit(fh));
@@ -1298,7 +1320,7 @@ public class SearchForm extends Form {
             y += 40;
         }
         if (currentHits.isEmpty()) {
-            FormFairTypeLabel empty = new FormFairTypeLabel("Nothing found. Try Scan.", 0, 0);
+            FormFairTypeLabel empty = new FormFairTypeLabel(wims2.L.t("empty"), 0, 0);
             empty.setFontOptions(new FontOptions(16));
             resultBox.addComponent(empty);
         }
