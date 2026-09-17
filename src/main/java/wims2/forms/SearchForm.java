@@ -596,17 +596,23 @@ public class SearchForm extends Form {
     private static java.util.ArrayList<Object> vanillaRoots(
         necesse.gfx.forms.MainGameFormManager fm) {
         java.util.ArrayList<Object> roots = new java.util.ArrayList<>();
+        // Central registry first: every displayed top-level component.
+        try {
+            for (Object o : fm.getComponents()) {
+                if (o != null && !roots.contains(o)) roots.add(o);
+            }
+        } catch (Exception ignored) {}
         // Explicit core roots first: open-container field is typed as the
         // ContainerComponent interface (not FormComponent), so reflection
         // below would skip it. Same for any other interface-typed fields.
         try {
-            if (fm.inventory != null) roots.add(fm.inventory);
-            if (fm.toolbar != null) roots.add(fm.toolbar);
-            if (fm.equipment != null) roots.add(fm.equipment);
-            if (fm.focus != null) roots.add(fm.focus);
-            if (fm.crafting != null) roots.add(fm.crafting);
+            if (fm.inventory != null && !roots.contains(fm.inventory)) roots.add(fm.inventory);
+            if (fm.toolbar != null && !roots.contains(fm.toolbar)) roots.add(fm.toolbar);
+            if (fm.equipment != null && !roots.contains(fm.equipment)) roots.add(fm.equipment);
+            if (fm.focus != null && !roots.contains(fm.focus)) roots.add(fm.focus);
+            if (fm.crafting != null && !roots.contains(fm.crafting)) roots.add(fm.crafting);
             Object floatRoot = floatMenuRoot(fm);
-            if (floatRoot != null) roots.add(floatRoot);
+            if (floatRoot != null && !roots.contains(floatRoot)) roots.add(floatRoot);
         } catch (Exception ignored) {}
         try {
             if (vanillaRootFields == null) {
