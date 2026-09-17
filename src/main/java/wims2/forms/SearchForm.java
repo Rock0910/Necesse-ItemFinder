@@ -664,9 +664,10 @@ public class SearchForm extends Form {
                 TargetMarker.tick(mainGame.getClient());
                 instance.clampToScreen(window);
                 if (instance.panel != null) instance.panel.followMain(window);
-                // U key: favorite the hovered icon (middle-click does the same)
+                // U key: favorite the hovered icon (skipped while typing text)
                 try {
-                    if (wims2.ModMain.favControl != null && wims2.ModMain.favControl.isPressed()) {
+                    if (wims2.ModMain.favControl != null && wims2.ModMain.favControl.isPressed()
+                        && !necesse.gfx.forms.components.FormTypingComponent.isCurrentlyTyping()) {
                         instance.favHovered();
                     }
                 } catch (Exception ignored) {}
