@@ -350,10 +350,7 @@ public class SearchForm extends Form {
                 target = findHoveredSlot(root);
                 if (target != null) break;
             }
-            if (target == null) {
-                try { target = fm.getItem(); } catch (Exception ignored) {} // held on cursor
-            }
-            if (target == null || target.item == null) return false;
+            if (target == null) return false;
             String sid = null;
             try { sid = target.item.getStringID(); } catch (Exception ignored) {}
             if (sid == null) return false;
@@ -365,12 +362,6 @@ public class SearchForm extends Form {
                 if (instance != null) {
                     instance.statusLabel.setText(msg);
                     instance.refreshPanel();
-                }
-            } catch (Exception ignored) {}
-            // Brief chat feedback when our window is closed (no status label visible)
-            try {
-                if (instance == null && mainGame.getClient() != null) {
-                    mainGame.getClient().chat(msg);
                 }
             } catch (Exception ignored) {}
             return true;
