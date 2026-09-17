@@ -142,9 +142,17 @@ public class SearchForm extends Form {
         addComponent(resultBox);
         flow.nextY(resultBox, 5);
 
-        // One-line affordance hint above the pager
-        FormFairTypeLabel iconTip = new FormFairTypeLabel(
-            wims2.L.t("tip"), 5, 0);
+        // One-line affordance hint above the pager, with live key names
+        String tipU = "U", tipP = "P";
+        try { tipU = wims2.ModMain.favControl.getKeyName(); } catch (Exception ignored) {}
+        try { tipP = wims2.ModMain.findControl.getKeyName(); } catch (Exception ignored) {}
+        String tipText;
+        try {
+            tipText = wims2.L.msg("tip2", "u", tipU, "p", tipP).translate();
+        } catch (Exception e) {
+            tipText = "Click icon: search.";
+        }
+        FormFairTypeLabel iconTip = new FormFairTypeLabel(tipText, 5, 0);
         iconTip.setFontOptions(new FontOptions(14));
         addComponent(iconTip);
         flow.nextY(iconTip, 5);
