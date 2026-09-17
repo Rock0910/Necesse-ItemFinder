@@ -306,6 +306,10 @@ public class SearchForm extends Form {
     public void searchFromHistory(String stringID) {
         defocusInput();
         if (stringID == null) return;
+        try {
+            wims2.WimsData.addHistoryItem(stringID);
+            refreshPanel();
+        } catch (Exception ignored) {}
         try { textInput.setText(stringID); } catch (Exception ignored) {}
         try {
             categoryDropdown.setSelected("all", new StaticMessage("All categories"));
@@ -1540,6 +1544,13 @@ public class SearchForm extends Form {
                 if (target == null) {
                     try { target = vanillaHoveredItem(mainGame, tm); } catch (Exception ignored) {}
                 }
+                try {
+                    String got = "none";
+                    if (target != null && target.item != null) {
+                        try { got = target.item.getStringID(); } catch (Exception ignored) {}
+                    }
+                    System.out.println("ItemFinder: P-find got " + got);
+                } catch (Exception ignored) {}
                 if (target != null && target.item != null) {
                     String sid = null;
                     try { sid = target.item.getStringID(); } catch (Exception ignored) {}
