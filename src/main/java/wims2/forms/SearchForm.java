@@ -677,9 +677,47 @@ public class SearchForm extends Form {
         return hit[0];
     }
 
-    /** Hovered element of a FormGeneralList (recipe lists, ...). */
+    /** Hovered element of a FormGeneralList (recipe lists, ...).
+     * Grid lists get exact index math copied from vanilla getMouseOffset;
+     * plain lists fall back to hover flags. */
     private static necesse.inventory.InventoryItem listHoveredItem(Object list) {
         try {
+            java.awt.Point mouse = mouseHudPos();
+            if (mouse != null
+                && list instanceof necesse.gfx.forms.components.lists.FormGeneralGridList
+                && list instanceof necesse.gfx.forms.components.FormComponent) {
+                necesse.gfx.forms.components.lists.FormGeneralGridList<?> grid =
+                    (necesse.gfx.forms.components.lists.FormGeneralGridList<?>) list;
+                int elementWidth = grid.elementWidth;
+                int elementHeight = grid.elementHeight;
+                int width = readIntField(list, "width");
+                int scroll = readIntField(list, "scroll");
+                if (elementWidth > 0 && width > 0) {
+                    int cols = Math.max(1, width / elementWidth);
+                    int xPad = (width % elementWidth) / 2;
+                    java.util.List<?> els = listElements(list);
+                    java.awt.Point lsp = null;
+                    try {
+                        lsp = ((necesse.gfx.forms.components.FormComponent) list)
+                            .getScreenPosition(true);
+                    } catch (Exception ignored) {}
+                    if (els != null && lsp != null) {
+                        for (int i = 0; i < els.size(); i++) {
+                            int row = i / cols;
+                            int ex = (i - row * cols) * elementWidth + xPad;
+                            int ey = row * elementHeight - scroll + 16;
+                            if (mouse.x >= lsp.x + ex && mouse.y >= lsp.y + ey
+                                && mouse.x < lsp.x + ex + elementWidth
+                                && mouse.y < lsp.y + ey + elementHeight) {
+                                necesse.inventory.InventoryItem item = elementItem(els.get(i));
+                                if (item != null) return item;
+                            }
+                        }
+                        return null;
+                    }
+                }
+            }
+            // Fallback: hover flags (plain lists)
             for (Object el : listElements(list)) {
                 if (!(el instanceof necesse.gfx.forms.components.lists.FormListElement)) continue;
                 boolean hov = false;
@@ -692,6 +730,24 @@ public class SearchForm extends Form {
             }
         } catch (Exception ignored) {}
         return null;
+    }
+
+    private static int readIntField(Object o, String name) {
+        Class<?> c = o.getClass();
+        while (c != null) {
+            try {
+                java.lang.reflect.Field f = c.getDeclaredField(name);
+                f.setAccessible(true);
+                Object v = f.get(o);
+                if (v instanceof Number) return ((Number) v).intValue();
+                return 0;
+            } catch (NoSuchFieldException e) {
+                c = c.getSuperclass();
+            } catch (Exception e) {
+                return 0;
+            }
+        }
+        return 0;
     }
 
     private static java.util.List<?> listElements(Object list) {
