@@ -359,6 +359,13 @@ public class SearchForm extends Form {
                         if (i > 0) sb.append(',');
                         sb.append(dbg.get(i).getClass().getSimpleName());
                     }
+                    sb.append("] hovering=[");
+                    java.util.ArrayList<String> hov = new java.util.ArrayList<>();
+                    for (Object root : dbg) debugHovering(root, hov);
+                    for (int i = 0; i < Math.min(10, hov.size()); i++) {
+                        if (i > 0) sb.append(',');
+                        sb.append(hov.get(i));
+                    }
                     sb.append(']');
                     System.out.println(sb.toString());
                 } catch (Exception ignored) {}
@@ -382,8 +389,58 @@ public class SearchForm extends Form {
         return false;
     }
 
-    private static java.lang.reflect.Field[] vanillaRootFields;
+    /** Debug: list components currently reporting hover, with item presence. */
+    private static void debugHovering(Object comp, java.util.ArrayList<String> out) {
+        if (comp == null || out.size() >= 10) return;
+        try {
+            if (comp instanceof necesse.gfx.forms.components.FormContainerRecipe) {
+                necesse.gfx.forms.components.FormContainerRecipe rc =
+                    (necesse.gfx.forms.components.FormContainerRecipe) comp;
+                boolean hov = false;
+                try { hov = rc.isHovering(); } catch (Exception ignored) {}
+                if (hov) {
+                    boolean has = false;
+                    try {
+                        has = rc.recipe != null && rc.recipe.recipe != null
+                            && rc.recipe.recipe.resultItem != null;
+                    } catch (Exception ignored) {}
+                    out.add("Recipe:" + (has ? "item" : "empty"));
+                }
+                return;
+            }
+            if (comp instanceof necesse.gfx.forms.components.containerSlot.FormContainerSlot) {
+                necesse.gfx.forms.components.containerSlot.FormContainerSlot slot =
+                    (necesse.gfx.forms.components.containerSlot.FormContainerSlot) comp;
+                boolean hov = false;
+                try { hov = slot.isHovering(); } catch (Exception ignored) {}
+                if (hov) {
+                    String info = "nodel";
+                    try {
+                        if (slot instanceof necesse.gfx.forms.components.containerSlot.FormContainerGhostItemSlot
+                            && ((necesse.gfx.forms.components.containerSlot.FormContainerGhostItemSlot) slot).ghostItem != null) {
+                            info = "ghost";
+                        } else {
+                            necesse.inventory.container.slots.ContainerSlot cs = slot.getContainerSlot();
+                            info = (cs != null && !cs.isClear()) ? "item" : "empty";
+                        }
+                    } catch (Exception ignored) {}
+                    out.add(slot.getClass().getSimpleName() + ":" + info);
+                }
+                return;
+            }
+            if (comp instanceof necesse.gfx.forms.ComponentListContainer) {
+                try {
+                    for (Object child :
+                        ((necesse.gfx.forms.ComponentListContainer<?>) comp).getComponents()) {
+                        debugHovering(child, out);
+                        if (out.size() >= 10) return;
+                    }
+                } catch (Exception ignored) {}
+            }
+        } catch (Exception ignored) {}
+    }
 
+    private static java.lang.reflect.Field[] vanillaRootFields;
     /** Every form/component registered on the form manager (cached field list). */
     private static java.util.ArrayList<Object> vanillaRoots(
         necesse.gfx.forms.MainGameFormManager fm) {
