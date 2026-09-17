@@ -530,7 +530,8 @@ public class SearchForm extends Form {
                         try {
                             if (java.lang.reflect.Modifier.isStatic(f.getModifiers())) continue;
                             Class<?> t = f.getType();
-                            if (necesse.gfx.forms.components.FormComponent.class.isAssignableFrom(t)
+                            if (t.isInterface()
+                                || necesse.gfx.forms.components.FormComponent.class.isAssignableFrom(t)
                                 || necesse.gfx.forms.ContainerComponent.class.isAssignableFrom(t)
                                 || java.util.Collection.class.isAssignableFrom(t)
                                 || java.util.Map.class.isAssignableFrom(t)) {
