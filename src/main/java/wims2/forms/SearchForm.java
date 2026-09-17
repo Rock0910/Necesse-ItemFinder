@@ -336,17 +336,17 @@ public class SearchForm extends Form {
     }
 
     /**
-     * U key fallback: favorite the item hovered in vanilla UI
-     * (backpack / toolbar / equipment / open container), or the one
-     * held on the mouse cursor.
+     * U key fallback: favorite the item hovered in vanilla UI.
+     * Walks every form registered on the form manager (backpack, toolbar,
+     * equipment, open containers, crafting stations, modded UIs...),
+     * so station fuel/material/output slots work too.
      */
     static boolean favVanilla(MainGame mainGame) {
         try {
             if (mainGame == null || mainGame.formManager == null) return false;
             necesse.gfx.forms.MainGameFormManager fm = mainGame.formManager;
             necesse.inventory.InventoryItem target = null;
-            Object[] roots = { fm.inventory, fm.toolbar, fm.equipment, fm.focus };
-            for (Object root : roots) {
+            for (Object root : vanillaRoots(fm)) {
                 target = findHoveredSlot(root);
                 if (target != null) break;
             }
@@ -369,7 +369,49 @@ public class SearchForm extends Form {
         return false;
     }
 
-    private static necesse.inventory.InventoryItem findHoveredSlot(Object comp) {
+    private static java.lang.reflect.Field[] vanillaRootFields;
+
+    /** Every form/component registered on the form manager (cached field list). */
+    private static java.util.ArrayList<Object> vanillaRoots(
+        necesse.gfx.forms.MainGameFormManager fm) {
+        java.util.ArrayList<Object> roots = new java.util.ArrayList<>();
+        try {
+            if (vanillaRootFields == null) {
+                java.util.ArrayList<java.lang.reflect.Field> all =
+                    new java.util.ArrayList<>();
+                Class<?> c = fm.getClass();
+                while (c != null) {
+                    for (java.lang.reflect.Field f : c.getDeclaredFields()) {
+                        try {
+                            if (java.lang.reflect.Modifier.isStatic(f.getModifiers())) continue;
+                            Class<?> t = f.getType();
+                            if (necesse.gfx.forms.components.FormComponent.class.isAssignableFrom(t)
+                                || java.util.Collection.class.isAssignableFrom(t)) {
+                                f.setAccessible(true);
+                                all.add(f);
+                            }
+                        } catch (Exception ignored) {}
+                    }
+                    c = c.getSuperclass();
+                }
+                vanillaRootFields = all.toArray(new java.lang.reflect.Field[0]);
+            }
+            for (java.lang.reflect.Field f : vanillaRootFields) {
+                try {
+                    Object v = f.get(fm);
+                    if (v == null) continue;
+                    if (v instanceof java.util.Collection) {
+                        for (Object o : (java.util.Collection<?>) v) {
+                            if (o != null && !roots.contains(o)) roots.add(o);
+                        }
+                    } else if (!roots.contains(v)) {
+                        roots.add(v);
+                    }
+                } catch (Exception ignored) {}
+            }
+        } catch (Exception ignored) {}
+        return roots;
+    }
         if (comp == null) return null;
         try {
             if (comp instanceof necesse.gfx.forms.components.containerSlot.FormContainerSlot) {
