@@ -390,53 +390,21 @@ public class SearchForm extends Form {
     }
 
     /** Debug: list components currently reporting hover, with item presence. */
-    private static void debugHovering(Object comp, java.util.ArrayList<String> out) {
-        if (comp == null || out.size() >= 10) return;
+    private static void debugHovering(Object root, java.util.ArrayList<String> out) {
+        if (root == null) return;
         try {
-            if (comp instanceof necesse.gfx.forms.components.FormContainerRecipe) {
-                necesse.gfx.forms.components.FormContainerRecipe rc =
-                    (necesse.gfx.forms.components.FormContainerRecipe) comp;
-                boolean hov = false;
-                try { hov = rc.isHovering(); } catch (Exception ignored) {}
-                if (hov) {
-                    boolean has = false;
-                    try {
-                        has = rc.recipe != null && rc.recipe.recipe != null
-                            && rc.recipe.recipe.resultItem != null;
-                    } catch (Exception ignored) {}
-                    out.add("Recipe:" + (has ? "item" : "empty"));
-                }
-                return;
-            }
-            if (comp instanceof necesse.gfx.forms.components.containerSlot.FormContainerSlot) {
-                necesse.gfx.forms.components.containerSlot.FormContainerSlot slot =
-                    (necesse.gfx.forms.components.containerSlot.FormContainerSlot) comp;
-                boolean hov = false;
-                try { hov = slot.isHovering(); } catch (Exception ignored) {}
-                if (hov) {
-                    String info = "nodel";
-                    try {
-                        if (slot instanceof necesse.gfx.forms.components.containerSlot.FormContainerGhostItemSlot
-                            && ((necesse.gfx.forms.components.containerSlot.FormContainerGhostItemSlot) slot).ghostItem != null) {
-                            info = "ghost";
-                        } else {
-                            necesse.inventory.container.slots.ContainerSlot cs = slot.getContainerSlot();
-                            info = (cs != null && !cs.isClear()) ? "item" : "empty";
-                        }
-                    } catch (Exception ignored) {}
-                    out.add(slot.getClass().getSimpleName() + ":" + info);
-                }
-                return;
-            }
-            if (comp instanceof necesse.gfx.forms.ComponentListContainer) {
+            walkTree(root, new java.util.HashSet<Object>(), comp -> {
+                if (out.size() >= 10) return;
                 try {
-                    for (Object child :
-                        ((necesse.gfx.forms.ComponentListContainer<?>) comp).getComponents()) {
-                        debugHovering(child, out);
-                        if (out.size() >= 10) return;
+                    if (comp instanceof necesse.gfx.forms.components.FormContainerRecipe
+                        || comp instanceof necesse.gfx.forms.components.containerSlot.FormContainerSlot) {
+                        if (isHoveringComp(comp)) {
+                            out.add(comp.getClass().getSimpleName() + ":"
+                                + (slotItem(comp) != null ? "item" : "empty"));
+                        }
                     }
                 } catch (Exception ignored) {}
-            }
+            });
         } catch (Exception ignored) {}
     }
 
@@ -494,51 +462,109 @@ public class SearchForm extends Form {
         return roots;
     }
 
-    private static necesse.inventory.InventoryItem findHoveredSlot(Object comp) {
-        if (comp == null) return null;
+    /** Deep walk: getComponents() children PLUS hidden sub-forms held in fields. */
+    private interface CompVisitor {
+        void visit(Object comp);
+    }
+
+    private static void walkTree(Object root, java.util.Set<Object> visited, CompVisitor v) {
+        if (root == null || visited.contains(root)) return;
+        visited.add(root);
         try {
-            // Recipe result preview (crafting station outputs): not a real slot
+            if (root instanceof java.util.Collection) {
+                for (Object o : (java.util.Collection<?>) root) walkTree(o, visited, v);
+                return;
+            }
+            if (!(root instanceof necesse.gfx.forms.components.FormComponent)) return;
+            v.visit(root);
+            if (root instanceof necesse.gfx.forms.ComponentListContainer) {
+                try {
+                    for (Object ch :
+                        ((necesse.gfx.forms.ComponentListContainer<?>) root).getComponents()) {
+                        walkTree(ch, visited, v);
+                    }
+                } catch (Exception ignored) {}
+            }
+            Class<?> c = root.getClass();
+            while (c != null && c != Object.class
+                && !c.getName().startsWith("java.")
+                && !c.getName().startsWith("javax.")) {
+                java.lang.reflect.Field[] fields;
+                try { fields = c.getDeclaredFields(); }
+                catch (Exception e) { break; }
+                for (java.lang.reflect.Field f : fields) {
+                    try {
+                        if (java.lang.reflect.Modifier.isStatic(f.getModifiers())) continue;
+                        Class<?> t = f.getType();
+                        if (necesse.gfx.forms.components.FormComponent.class.isAssignableFrom(t)
+                            || java.util.Collection.class.isAssignableFrom(t)) {
+                            f.setAccessible(true);
+                            Object val = f.get(root);
+                            if (val instanceof java.util.Collection) {
+                                for (Object o : (java.util.Collection<?>) val) {
+                                    walkTree(o, visited, v);
+                                }
+                            } else {
+                                walkTree(val, visited, v);
+                            }
+                        }
+                    } catch (Exception ignored) {}
+                }
+                c = c.getSuperclass();
+            }
+        } catch (Exception ignored) {}
+    }
+
+    private static necesse.inventory.InventoryItem slotItem(Object comp) {
+        try {
             if (comp instanceof necesse.gfx.forms.components.FormContainerRecipe) {
                 necesse.gfx.forms.components.FormContainerRecipe rc =
                     (necesse.gfx.forms.components.FormContainerRecipe) comp;
-                try {
-                    if (rc.isHovering() && rc.recipe != null && rc.recipe.recipe != null
-                        && rc.recipe.recipe.resultItem != null) {
-                        return rc.recipe.recipe.resultItem;
-                    }
-                } catch (Exception ignored) {}
+                if (rc.recipe != null && rc.recipe.recipe != null) {
+                    return rc.recipe.recipe.resultItem;
+                }
                 return null;
             }
             if (comp instanceof necesse.gfx.forms.components.containerSlot.FormContainerSlot) {
                 necesse.gfx.forms.components.containerSlot.FormContainerSlot slot =
                     (necesse.gfx.forms.components.containerSlot.FormContainerSlot) comp;
-                if (slot.isHovering()) {
-                    // Ghost slots (fuel filters etc.): real item lives in ghostItem
-                    try {
-                        if (slot instanceof necesse.gfx.forms.components.containerSlot.FormContainerGhostItemSlot) {
-                            necesse.inventory.InventoryItem ghost =
-                                ((necesse.gfx.forms.components.containerSlot.FormContainerGhostItemSlot) slot).ghostItem;
-                            if (ghost != null) return ghost;
-                        }
-                    } catch (Exception ignored) {}
-                    try {
-                        necesse.inventory.container.slots.ContainerSlot cs = slot.getContainerSlot();
-                        if (cs != null && !cs.isClear()) return cs.getItem();
-                    } catch (Exception ignored) {}
+                if (slot instanceof necesse.gfx.forms.components.containerSlot.FormContainerGhostItemSlot) {
+                    necesse.inventory.InventoryItem ghost =
+                        ((necesse.gfx.forms.components.containerSlot.FormContainerGhostItemSlot) slot).ghostItem;
+                    if (ghost != null) return ghost;
                 }
-                return null;
-            }
-            if (comp instanceof necesse.gfx.forms.ComponentListContainer) {
                 try {
-                    for (Object child :
-                        ((necesse.gfx.forms.ComponentListContainer<?>) comp).getComponents()) {
-                        necesse.inventory.InventoryItem r = findHoveredSlot(child);
-                        if (r != null) return r;
-                    }
+                    necesse.inventory.container.slots.ContainerSlot cs = slot.getContainerSlot();
+                    if (cs != null && !cs.isClear()) return cs.getItem();
                 } catch (Exception ignored) {}
             }
         } catch (Exception ignored) {}
         return null;
+    }
+
+    private static boolean isHoveringComp(Object comp) {
+        try {
+            if (comp instanceof necesse.gfx.forms.components.FormContainerRecipe) {
+                return ((necesse.gfx.forms.components.FormContainerRecipe) comp).isHovering();
+            }
+            if (comp instanceof necesse.gfx.forms.components.containerSlot.FormContainerSlot) {
+                return ((necesse.gfx.forms.components.containerSlot.FormContainerSlot) comp).isHovering();
+            }
+        } catch (Exception ignored) {}
+        return false;
+    }
+
+    private static necesse.inventory.InventoryItem findHoveredSlot(Object root) {
+        final necesse.inventory.InventoryItem[] hit = { null };
+        try {
+            walkTree(root, new java.util.HashSet<Object>(), comp -> {
+                if (hit[0] != null) return;
+                if (!isHoveringComp(comp)) return;
+                necesse.inventory.InventoryItem item = slotItem(comp);
+                if (item != null) hit[0] = item;
+            });
+        } catch (Exception ignored) {}
+        return hit[0];
     }
 
     private static ItemIconButton findHoveredIcon(FormContentBox box) {
