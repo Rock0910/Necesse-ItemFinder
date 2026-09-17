@@ -415,12 +415,15 @@ public class SearchForm extends Form {
     private static void debugHovering(Object root, java.util.ArrayList<String> out) {
         if (root == null) return;
         final int[] counts = new int[3]; // visited, slots, recipes
+        final java.util.HashSet<String> kinds = new java.util.HashSet<>();
         final java.util.ArrayList<String> under = new java.util.ArrayList<>();
         try {
             walkTree(root, new java.util.HashSet<Object>(), comp -> {
                 if (out.size() >= 30) return;
                 try {
                     counts[0]++;
+                    String cn = comp.getClass().getSimpleName();
+                    if (kinds.size() < 40) kinds.add(cn);
                     // Any component under the mouse (identifies mystery hover targets)
                     if (under.size() < 6 && comp instanceof necesse.gfx.forms.components.FormComponent) {
                         try {
@@ -492,6 +495,7 @@ public class SearchForm extends Form {
                 } catch (Exception ignored) {}
             });
             out.add("~visited=" + counts[0] + " slots=" + counts[1] + " recipes=" + counts[2]);
+            out.add("~kinds=" + kinds);
             for (String u : under) out.add(u);
             try {
                 java.awt.Point mp = mouseHudPos();
