@@ -202,6 +202,30 @@ public class WimsData {
         }
     }
 
+    public static synchronized int getOptInt(String key, int def) {
+        loadOpts();
+        try {
+            String v = opts.getProperty(key);
+            return v == null ? def : Integer.parseInt(v);
+        } catch (Exception e) {
+            return def;
+        }
+    }
+
+    public static synchronized void setOptInt(String key, int value) {
+        loadOpts();
+        try {
+            opts.setProperty(key, String.valueOf(value));
+            String f = cfg("itemfinderopts.cfg");
+            if (f == null) return;
+            try (java.io.OutputStream out = new java.io.FileOutputStream(f)) {
+                opts.store(out, "ItemFinder options");
+            }
+        } catch (Exception e) {
+            System.out.println("ItemFinder: save failed for options (" + e + ")");
+        }
+    }
+
     /** Resolve a stored stringID to a displayable InventoryItem (null if unknown). */
     public static necesse.inventory.InventoryItem resolveItem(String stringID) {
         if (stringID == null || stringID.isEmpty()) return null;

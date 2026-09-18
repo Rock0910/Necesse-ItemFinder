@@ -60,3 +60,4 @@ openkeys=キー設定
 optenter=Enterで入力欄のフォーカス解除
 opttitle=設定
 optautofocus=開いた時に入力欄へフォーカス
+optopacity=透明度 (%)

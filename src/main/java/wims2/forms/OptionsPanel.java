@@ -8,6 +8,7 @@ import necesse.gfx.forms.components.FormContentIconButton;
 import necesse.gfx.forms.components.FormFairTypeLabel;
 import necesse.gfx.forms.components.FormFlow;
 import necesse.gfx.forms.components.FormInputSize;
+import necesse.gfx.forms.components.FormSlider;
 import necesse.gfx.forms.components.FormTextButton;
 import necesse.gfx.gameFont.FontOptions;
 import necesse.gfx.ui.ButtonColor;
@@ -46,6 +47,17 @@ public class OptionsPanel extends Form {
         addCheck(flow, "optautofocus", main.isAutofocus(), main::setAutofocus);
         addCheck(flow, "optenter", main.isEnterDefocus(), main::setEnterDefocus);
         addCheck(flow, "optdebug", wims2.ModMain.debugLog, main::setDebugLog);
+
+        // Opacity slider: 15% .. 100% (default = previous 45%)
+        try {
+            FormSlider slider = new FormSlider(wims2.L.t("optopacity"), 5, flow.next(),
+                main.getOpacityPercent(), 15, 100, getWidth() - 10);
+            addComponent(slider);
+            slider.onChanged(e -> {
+                try { main.setOpacityPercent(slider.getValue()); } catch (Exception ignored) {}
+            });
+            flow.nextY(slider, 5);
+        } catch (Exception ignored) {}
 
         FormTextButton keys = new FormTextButton(
             wims2.L.t("openkeys"), 5, flow.next(), getWidth() - 10,

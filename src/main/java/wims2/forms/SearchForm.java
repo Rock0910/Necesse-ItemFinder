@@ -49,6 +49,8 @@ public class SearchForm extends Form {
     private boolean enterDefocus = wims2.WimsData.getOpt("enterdefocus", true);
     /** Toggle: focus the search box when the window opens (default on). */
     private boolean autofocus = wims2.WimsData.getOpt("autofocus", true);
+    /** Window opacity in percent (15..100), default matches the old 0.45. */
+    private int opacity = wims2.WimsData.getOptInt("opacity", 45);
     /** Set by resnapshot() so it does not scan twice for one action. */
     private boolean skipRescanOnce = false;
 
@@ -69,13 +71,28 @@ public class SearchForm extends Form {
     public void setDebugLog(boolean v) {
         wims2.ModMain.debugLog = v; wims2.WimsData.setOpt("debug", v);
     }
+    /** Window background opacity, 15..100 (percent). */
+    public int getOpacityPercent() { return opacity; }
+    public void setOpacityPercent(int v) {
+        if (v < 15) v = 15;
+        if (v > 100) v = 100;
+        opacity = v;
+        wims2.WimsData.setOptInt("opacity", v);
+        applyOpacity();
+    }
+    private void applyOpacity() {
+        float a = opacity / 100f;
+        try { drawBaseAlpha = a; } catch (Exception ignored) {}
+        try { if (panel != null) panel.drawBaseAlpha = a; } catch (Exception ignored) {}
+        try { if (optionsPanel != null) optionsPanel.drawBaseAlpha = a; } catch (Exception ignored) {}
+    }
     public SidePanel getPanel() { return panel; }
 
     public SearchForm(MainGame mainGame) {
         super("itemfindersearch", 460, 120);
         this.mainGame = mainGame;
         // Semi-transparent window background so the game is visible behind it
-        try { drawBaseAlpha = 0.45f; } catch (Exception ignored) {}
+        try { drawBaseAlpha = opacity / 100f; } catch (Exception ignored) {}
         FormFlow flow = new FormFlow(5);
 
         // Title + mode icons + close (X) at top-right
@@ -400,6 +417,7 @@ public class SearchForm extends Form {
         try {
             if (optionsPanel != null) { hideOptions(); return; }
             optionsPanel = (OptionsPanel) mainGame.formManager.addComponent(new OptionsPanel(this));
+            try { optionsPanel.drawBaseAlpha = opacity / 100f; } catch (Exception ignored) {}
         } catch (Exception ignored) {}
     }
 
@@ -429,6 +447,7 @@ public class SearchForm extends Form {
                 return;
             }
             panel = (SidePanel) mainGame.formManager.addComponent(new SidePanel(this));
+            try { panel.drawBaseAlpha = opacity / 100f; } catch (Exception ignored) {}
             panel.showMode(m);
         } catch (Exception ignored) {}
     }
