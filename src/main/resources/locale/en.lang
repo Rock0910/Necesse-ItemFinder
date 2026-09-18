@@ -59,3 +59,5 @@ dirnw=NW
 dirhere=HERE
 openkeys=Key bindings
 optenter=Enter drops textbox focus
+opttitle=Options
+optautofocus=Focus search box on open

@@ -58,3 +58,5 @@ dirnw=左上
 dirhere=此处
 openkeys=按键绑定
 optenter=回车后输入框失去焦点
+opttitle=设置
+optautofocus=开启时自动聚焦输入框

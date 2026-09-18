@@ -40,7 +40,6 @@ public class SearchForm extends Form {
     private FormContentBox resultBox;
     private FormFairTypeLabel statusLabel;
     private FormFairTypeLabel totalLabel;
-    private FormCheckBox rescanBox;
 
     private SearchEngine.Snapshot snapshot;
     private int currentRadius = 16;
@@ -48,8 +47,19 @@ public class SearchForm extends Form {
     private boolean rescanOnSearch = true;
     /** Toggle: pressing Enter in the search box drops focus (default on). */
     private boolean enterDefocus = true;
+    /** Toggle: focus the search box when the window opens (default on). */
+    private boolean autofocus = true;
     /** Set by resnapshot() so it does not scan twice for one action. */
     private boolean skipRescanOnce = false;
+
+    // ---- option accessors (used by the gear panel) ----
+    public boolean isRescanOnSearch() { return rescanOnSearch; }
+    public void setRescanOnSearch(boolean v) { rescanOnSearch = v; }
+    public boolean isEnterDefocus() { return enterDefocus; }
+    public void setEnterDefocus(boolean v) { enterDefocus = v; }
+    public boolean isAutofocus() { return autofocus; }
+    public void setAutofocus(boolean v) { autofocus = v; }
+    public SidePanel getPanel() { return panel; }
 
     public SearchForm(MainGame mainGame) {
         super("itemfindersearch", 460, 120);
@@ -65,7 +75,7 @@ public class SearchForm extends Form {
         title.setFontOptions(new FontOptions(20));
         addComponent(title);
         FormContentIconButton histBtn = new FormContentIconButton(
-            getWidth() - 118, titleY, 36, FormInputSize.SIZE_32, ButtonColor.BASE,
+            getWidth() - 154, titleY, 36, FormInputSize.SIZE_32, ButtonColor.BASE,
             uiStyle.rotate_counterclockwise_32, wims2.L.m("history"));
         addComponent(histBtn);
         histBtn.onClicked(e -> { defocusInput(); togglePanel(SidePanel.PanelMode.HISTORY); });
@@ -74,6 +84,12 @@ public class SearchForm extends Form {
             uiStyle.firework_star, wims2.L.m("favorites"));
         addComponent(favBtn);
         favBtn.onClicked(e -> { defocusInput(); togglePanel(SidePanel.PanelMode.FAVS); });
+        // Gear: all checkbox options + key bindings shortcut
+        FormContentIconButton gearBtn = new FormContentIconButton(
+            getWidth() - 190, titleY, 36, FormInputSize.SIZE_32, ButtonColor.BASE,
+            uiStyle.config_button_32, wims2.L.m("opttitle"));
+        addComponent(gearBtn);
+        gearBtn.onClicked(e -> { defocusInput(); toggleOptions(); });
         FormContentIconButton closeBtn = new FormContentIconButton(
             getWidth() - 46, titleY, 36, FormInputSize.SIZE_32, ButtonColor.BASE,
             uiStyle.button_cross, wims2.L.m("close"));
@@ -112,41 +128,7 @@ public class SearchForm extends Form {
         clearBtn.onClicked(e -> { defocusInput(); clearTextbox(); });
         flow.nextY(textInput, 5);
 
-        // Toggle: re-scan containers in range on every search
-        rescanBox = new FormCheckBox(wims2.L.t("optrescan"), 5, flow.next());
-        addComponent(rescanBox);
-        rescanBox.checked = rescanOnSearch;
-        rescanBox.onClicked(e -> {
-            defocusInput();
-            rescanOnSearch = rescanBox.checked;
-        });
-        flow.nextY(rescanBox, 5);
-
-        // Debug log toggle (default off) + shortcut to the game's key bindings
-        int optRowY = flow.next();
-        FormCheckBox debugBox = new FormCheckBox(wims2.L.t("optdebug"), 5, optRowY);
-        addComponent(debugBox);
-        debugBox.checked = wims2.ModMain.debugLog;
-        debugBox.onClicked(e -> {
-            defocusInput();
-            wims2.ModMain.debugLog = debugBox.checked;
-        });
-        FormTextButton keysBtn = new FormTextButton(
-            wims2.L.t("openkeys"), getWidth() - 140, optRowY, 135,
-            FormInputSize.SIZE_32, ButtonColor.BASE);
-        addComponent(keysBtn);
-        keysBtn.onClicked(e -> { defocusInput(); openKeyBindings(); });
-        flow.nextY(keysBtn, 5);
-
-        // Enter behaviour: drop focus (default) or keep typing
-        FormCheckBox enterBox = new FormCheckBox(wims2.L.t("optenter"), 5, flow.next());
-        addComponent(enterBox);
-        enterBox.checked = enterDefocus;
-        enterBox.onClicked(e -> {
-            defocusInput();
-            enterDefocus = enterBox.checked;
-        });
-        flow.nextY(enterBox, 5);
+        // (checkbox options now live in the gear panel)
 
         // Category + Range + Reset on the same row
         int dropY = flow.next();
@@ -302,8 +284,10 @@ public class SearchForm extends Form {
     @Override
     public void init() {
         super.init();
-        // ?��? WIMS 也�??��?：�?它鍵?��?字進�?了輸?��?
-        try { textInput.setTyping(true); } catch (Exception ignored) {}
+        // Focus the search box on open, unless the option is turned off
+        if (autofocus) {
+            try { textInput.setTyping(true); } catch (Exception ignored) {}
+        }
     }
 
     /** Any button click hands keyboard focus back (input box stops eating keys) */
@@ -399,6 +383,25 @@ public class SearchForm extends Form {
     // ---- Side panel (history / favorites icon walls) ----
 
     private SidePanel panel;
+    private OptionsPanel optionsPanel;
+
+    /** Gear: toggle the options panel. */
+    public void toggleOptions() {
+        try {
+            if (optionsPanel != null) { hideOptions(); return; }
+            optionsPanel = (OptionsPanel) mainGame.formManager.addComponent(new OptionsPanel(this));
+        } catch (Exception ignored) {}
+    }
+
+    public void hideOptions() {
+        try {
+            if (optionsPanel != null && mainGame.formManager != null) {
+                mainGame.formManager.removeComponent(optionsPanel);
+                try { optionsPanel.dispose(); } catch (Exception ignored) {}
+            }
+        } catch (Exception ignored) {}
+        optionsPanel = null;
+    }
 
     public MainGame getMainGame() {
         return mainGame;
@@ -1611,6 +1614,7 @@ public class SearchForm extends Form {
         try { wims2.MarkerRegistry.clear(); } catch (Exception ignored) {}
         if (instance == this) instance = null;
         panel = null;
+        optionsPanel = null;
         snapshot = null;
         super.dispose();
     }
@@ -1622,7 +1626,7 @@ public class SearchForm extends Form {
      * Controller, ...) which works for both keyboard and gamepad players.
      * Our window closes automatically because frameTick notices the pause menu.
      */
-    private void openKeyBindings() {
+    void openKeyBindings() {
         try {
             necesse.gfx.forms.presets.PauseMenuForm pm = mainGame.formManager.pauseMenu;
             if (pm == null) return;
@@ -1647,6 +1651,7 @@ public class SearchForm extends Form {
             savedPanel = (panel != null) ? panel.getMode().name() : null;
         } catch (Exception ignored) {}
         hidePanel();
+        hideOptions();
         savePos();
         try { wims2.MarkerRegistry.clear(); } catch (Exception ignored) {}
         if (mainGame.formManager != null) mainGame.formManager.removeComponent(this);
@@ -1755,6 +1760,7 @@ public class SearchForm extends Form {
                 TargetMarker.tick(mainGame.getClient());
                 instance.clampToScreen(window);
                 if (instance.panel != null) instance.panel.followMain(window);
+                if (instance.optionsPanel != null) instance.optionsPanel.followMain(window);
                 // Live distance refresh, twice a second
                 if (System.currentTimeMillis() - instance.lastDistRefresh > 500) {
                     instance.lastDistRefresh = System.currentTimeMillis();
