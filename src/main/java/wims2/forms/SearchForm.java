@@ -40,6 +40,7 @@ public class SearchForm extends Form {
     private FormContentBox resultBox;
     private FormFairTypeLabel statusLabel;
     private FormFairTypeLabel totalLabel;
+    private FormTextButton prevBtn, nextBtn;
 
     private SearchEngine.Snapshot snapshot;
     private int currentRadius = 16;
@@ -264,14 +265,14 @@ public class SearchForm extends Form {
         // Page row: pagination instead of scrolling. Scrolling (wheel or
         // scrollY) proved unreliable here, paging just rebuilds the list.
         int pageRowY = flow.next();
-        FormTextButton prevBtn = new FormTextButton(
+        prevBtn = new FormTextButton(
             wims2.L.t("prev"), 5, pageRowY, getWidth() / 2 - 10, FormInputSize.SIZE_32, ButtonColor.BASE);
         addComponent(prevBtn);
         prevBtn.onClicked(e -> {
             defocusInput();
             if (page > 0) { page--; showPage(); }
         });
-        FormTextButton nextBtn = new FormTextButton(
+        nextBtn = new FormTextButton(
             wims2.L.t("next"), getWidth() / 2 + 5, pageRowY, getWidth() / 2 - 10, FormInputSize.SIZE_32, ButtonColor.BASE);
         addComponent(nextBtn);
         nextBtn.onClicked(e -> {
@@ -1523,7 +1524,17 @@ public class SearchForm extends Form {
         }
         updateStatus();
         updateTotalLabel(); // page number changes here
+        updatePagerButtons();
         lastDistRefresh = System.currentTimeMillis();
+    }
+
+    /** Grey out Prev/Next when there is nowhere to go. */
+    private void updatePagerButtons() {
+        try {
+            int pages = totalPages();
+            if (prevBtn != null) prevBtn.setActive(page > 0);
+            if (nextBtn != null) nextBtn.setActive(page < pages - 1);
+        } catch (Exception ignored) {}
     }
 
     private static String dirText(int dx, int dy) {

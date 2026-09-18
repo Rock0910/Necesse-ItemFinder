@@ -62,3 +62,4 @@ optenter=Enter drops textbox focus
 opttitle=Options
 optautofocus=Focus search box on open
 optopacity=Opacity (%)
+pageno=Page <p>/<t>

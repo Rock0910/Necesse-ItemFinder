@@ -29,6 +29,8 @@ public class SidePanel extends Form {
     private int page;
     private FormContentBox box;
     private FormFairTypeLabel titleLabel;
+    private FormFairTypeLabel pageLabel;
+    private FormTextButton prevBtn, nextBtn;
     private final List<String> ids = new ArrayList<>();
 
     public SidePanel(SearchForm main) {
@@ -59,19 +61,24 @@ public class SidePanel extends Form {
         flow.nextY(box, 5);
 
         int pr = flow.next();
-        FormTextButton prev = new FormTextButton(
+        prevBtn = new FormTextButton(
             wims2.L.t("prev"), 5, pr, getWidth() / 2 - 10, FormInputSize.SIZE_32, ButtonColor.BASE);
-        addComponent(prev);
-        prev.onClicked(e -> {
+        addComponent(prevBtn);
+        prevBtn.onClicked(e -> {
             if (page > 0) { page--; render(); }
         });
-        FormTextButton next = new FormTextButton(
+        nextBtn = new FormTextButton(
             wims2.L.t("next"), getWidth() / 2 + 5, pr, getWidth() / 2 - 10, FormInputSize.SIZE_32, ButtonColor.BASE);
-        addComponent(next);
-        next.onClicked(e -> {
+        addComponent(nextBtn);
+        nextBtn.onClicked(e -> {
             if (page < totalPages() - 1) { page++; render(); }
         });
-        flow.nextY(next, 5);
+        flow.nextY(nextBtn, 5);
+
+        pageLabel = new FormFairTypeLabel("", 5, 0);
+        pageLabel.setFontOptions(new FontOptions(14));
+        addComponent(pageLabel);
+        flow.nextY(pageLabel, 5);
 
         setHeight(flow.next() + 5);
         render();
@@ -118,6 +125,16 @@ public class SidePanel extends Form {
         } catch (Exception ignored) {}
         if (page > totalPages() - 1) page = totalPages() - 1;
         if (page < 0) page = 0;
+        // Page indicator + disable paging when there is only one page
+        try {
+            if (pageLabel != null) {
+                pageLabel.setText(wims2.L.msg("pageno",
+                    "p", String.valueOf(page + 1),
+                    "t", String.valueOf(totalPages())));
+            }
+            if (prevBtn != null) prevBtn.setActive(page > 0);
+            if (nextBtn != null) nextBtn.setActive(page < totalPages() - 1);
+        } catch (Exception ignored) {}
 
         int y = 0;
         // History gets a clear-all button as its first row
