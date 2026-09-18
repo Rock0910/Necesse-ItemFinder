@@ -393,6 +393,7 @@ public class SearchForm extends Form {
             resultBox.clearComponents();
             rows.clear();
             updateTotalLabel();
+            updatePagerButtons(); // no results: pager must grey out too
             updateStatus();
             return;
         }

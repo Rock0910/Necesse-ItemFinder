@@ -77,12 +77,13 @@ public class SidePanel extends Form {
         });
         flow.nextY(nextBtn, 5);
 
-        pageLabel = new FormFairTypeLabel("", 5, 0);
+        // Placeholder text so FormFlow reserves a real height for this line
+        pageLabel = new FormFairTypeLabel(wims2.L.msg("pageno", "p", "1", "t", "1"), 5, 0);
         pageLabel.setFontOptions(new FontOptions(14));
         addComponent(pageLabel);
-        flow.nextY(pageLabel, 5);
+        flow.nextY(pageLabel, 8);
 
-        setHeight(flow.next() + 5);
+        setHeight(flow.next() + 12); // a little bottom margin for the page line
         render();
     }
 
