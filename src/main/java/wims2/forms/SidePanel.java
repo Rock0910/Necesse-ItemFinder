@@ -65,13 +65,15 @@ public class SidePanel extends Form {
             wims2.L.t("prev"), 5, pr, getWidth() / 2 - 10, FormInputSize.SIZE_32, ButtonColor.BASE);
         addComponent(prevBtn);
         prevBtn.onClicked(e -> {
-            if (page > 0) { page--; render(); }
+            int pages = totalPages();
+            if (pages > 1) { page = (page - 1 + pages) % pages; render(); } // wrap
         });
         nextBtn = new FormTextButton(
             wims2.L.t("next"), getWidth() / 2 + 5, pr, getWidth() / 2 - 10, FormInputSize.SIZE_32, ButtonColor.BASE);
         addComponent(nextBtn);
         nextBtn.onClicked(e -> {
-            if (page < totalPages() - 1) { page++; render(); }
+            int pages = totalPages();
+            if (pages > 1) { page = (page + 1) % pages; render(); } // wrap
         });
         flow.nextY(nextBtn, 5);
 
@@ -132,8 +134,8 @@ public class SidePanel extends Form {
                     "p", String.valueOf(page + 1),
                     "t", String.valueOf(totalPages())));
             }
-            if (prevBtn != null) prevBtn.setActive(page > 0);
-            if (nextBtn != null) nextBtn.setActive(page < totalPages() - 1);
+            if (prevBtn != null) prevBtn.setActive(totalPages() > 1);
+            if (nextBtn != null) nextBtn.setActive(totalPages() > 1);
         } catch (Exception ignored) {}
 
         int y = 0;

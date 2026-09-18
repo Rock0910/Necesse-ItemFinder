@@ -270,14 +270,16 @@ public class SearchForm extends Form {
         addComponent(prevBtn);
         prevBtn.onClicked(e -> {
             defocusInput();
-            if (page > 0) { page--; showPage(); }
+            int pages = totalPages();
+            if (pages > 1) { page = (page - 1 + pages) % pages; showPage(); } // wrap to bottom
         });
         nextBtn = new FormTextButton(
             wims2.L.t("next"), getWidth() / 2 + 5, pageRowY, getWidth() / 2 - 10, FormInputSize.SIZE_32, ButtonColor.BASE);
         addComponent(nextBtn);
         nextBtn.onClicked(e -> {
             defocusInput();
-            if (page < totalPages() - 1) { page++; showPage(); }
+            int pages = totalPages();
+            if (pages > 1) { page = (page + 1) % pages; showPage(); } // wrap to top
         });
         flow.nextY(nextBtn, 5);
 
@@ -1528,12 +1530,12 @@ public class SearchForm extends Form {
         lastDistRefresh = System.currentTimeMillis();
     }
 
-    /** Grey out Prev/Next when there is nowhere to go. */
+    /** Grey out Prev/Next only when everything fits on one page. */
     private void updatePagerButtons() {
         try {
-            int pages = totalPages();
-            if (prevBtn != null) prevBtn.setActive(page > 0);
-            if (nextBtn != null) nextBtn.setActive(page < pages - 1);
+            boolean many = totalPages() > 1;
+            if (prevBtn != null) prevBtn.setActive(many);
+            if (nextBtn != null) nextBtn.setActive(many);
         } catch (Exception ignored) {}
     }
 
