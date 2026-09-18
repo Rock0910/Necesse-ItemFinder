@@ -84,8 +84,12 @@ public class SearchForm extends Form {
         textInput = new FormTextInput(5, inputY, FormInputSize.SIZE_32, 350, 200, 50);
         addComponent(textInput);
         textInput.placeHolder = wims2.L.m("placeholder");
-        // Enter searches but keeps keyboard focus, so you can keep typing
-        textInput.onSubmit(e -> applyFilter(true));
+        // Enter searches but keeps keyboard focus (preventDefault stops the
+        // textbox from clearing typing state on submit)
+        textInput.onSubmit(e -> {
+            e.preventDefault();
+            applyFilter(true);
+        });
         // Clicking anywhere outside the box drops focus (default is false)
         try { textInput.allowUsedMouseClickStopTyping = true; } catch (Exception ignored) {}
         FormContentIconButton scanBtn = new FormContentIconButton(
@@ -1542,15 +1546,15 @@ public class SearchForm extends Form {
      * with the gold world pillars, direction is easy to follow.
      */
     private static String dirOf(int dx, int dy) {
-        if (dx == 0 && dy == 0) return "HERE";
+        if (dx == 0 && dy == 0) return wims2.L.t("dirhere");
         int ax = Math.abs(dx), ay = Math.abs(dy);
-        String ns = dy < 0 ? "N" : (dy > 0 ? "S" : "");
-        String ew = dx > 0 ? "E" : (dx < 0 ? "W" : "");
+        String ns = dy < 0 ? wims2.L.t("dirn") : (dy > 0 ? wims2.L.t("dirs") : "");
+        String ew = dx > 0 ? wims2.L.t("dire") : (dx < 0 ? wims2.L.t("dirw") : "");
         if (ax == 0) return ns;
         if (ay == 0) return ew;
         if (ax >= 2 * ay) return ew;
         if (ay >= 2 * ax) return ns;
-        return ns + ew; // e.g. NE, SW
+        return ns + ew; // e.g. NE, 右上
     }
 
     public void onCancel() {

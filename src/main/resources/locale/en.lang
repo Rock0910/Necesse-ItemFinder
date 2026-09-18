@@ -43,3 +43,13 @@ ctlfindtip=Search hovered item
 cardid=ID:
 carden=EN:
 cardcat=Category:
+
+dirn=N
+dirne=NE
+dire=E
+dirse=SE
+dirs=S
+dirsw=SW
+dirw=W
+dirnw=NW
+dirhere=HERE
