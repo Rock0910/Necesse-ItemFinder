@@ -116,15 +116,21 @@ public class SearchForm extends Form {
         });
         flow.nextY(rescanBox, 5);
 
-        // Debug log toggle (default off)
-        FormCheckBox debugBox = new FormCheckBox(wims2.L.t("optdebug"), 5, flow.next());
+        // Debug log toggle (default off) + shortcut to the game's key bindings
+        int optRowY = flow.next();
+        FormCheckBox debugBox = new FormCheckBox(wims2.L.t("optdebug"), 5, optRowY);
         addComponent(debugBox);
         debugBox.checked = wims2.ModMain.debugLog;
         debugBox.onClicked(e -> {
             defocusInput();
             wims2.ModMain.debugLog = debugBox.checked;
         });
-        flow.nextY(debugBox, 5);
+        FormTextButton keysBtn = new FormTextButton(
+            wims2.L.t("openkeys"), getWidth() - 140, optRowY, 135,
+            FormInputSize.SIZE_32, ButtonColor.BASE);
+        addComponent(keysBtn);
+        keysBtn.onClicked(e -> { defocusInput(); openKeyBindings(); });
+        flow.nextY(keysBtn, 5);
 
         // Category + Range + Reset on the same row
         int dropY = flow.next();
@@ -1551,6 +1557,22 @@ public class SearchForm extends Form {
         panel = null;
         snapshot = null;
         super.dispose();
+    }
+
+    /**
+     * Jump straight to the game's key binding page (pause menu > Settings >
+     * Controls). Our own window closes automatically because frameTick
+     * detects the pause menu is open.
+     */
+    private void openKeyBindings() {
+        try {
+            necesse.gfx.forms.presets.PauseMenuForm pm = mainGame.formManager.pauseMenu;
+            if (pm == null) return;
+            pm.setHidden(false);
+            try { pm.settings.setHidden(false); } catch (Exception ignored) {}
+            try { pm.makeCurrent(pm.settings); } catch (Exception ignored) {}
+            try { pm.settings.makeControlsCurrent(); } catch (Exception ignored) {}
+        } catch (Exception ignored) {}
     }
 
     public void onCancel() {
