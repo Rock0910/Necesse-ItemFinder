@@ -1295,11 +1295,16 @@ public class SearchForm extends Form {
 
     private void applySort() {
         try {
+            // Distance sort uses the player's CURRENT position, so the order
+            // always matches the distances shown in the list.
+            final int px = playerTileX(), py = playerTileY();
             java.util.Comparator<SearchEngine.Hit> c;
             if (sortField == 1) {
                 c = (a, b) -> Integer.compare(a.totalAmount, b.totalAmount);
             } else {
-                c = (a, b) -> Integer.compare(a.distance, b.distance);
+                c = (a, b) -> Integer.compare(
+                    Math.max(Math.abs(a.tileX - px), Math.abs(a.tileY - py)),
+                    Math.max(Math.abs(b.tileX - px), Math.abs(b.tileY - py)));
             }
             if (sortDesc) c = c.reversed();
             currentHits.sort(c);
