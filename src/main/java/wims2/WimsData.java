@@ -163,6 +163,45 @@ public class WimsData {
         }
     }
 
+    // ---- UI options (checkbox states) ----
+
+    private static final java.util.Properties opts = new java.util.Properties();
+    private static boolean optsLoaded = false;
+
+    private static synchronized void loadOpts() {
+        if (optsLoaded) return;
+        optsLoaded = true;
+        String f = cfg("itemfinderopts.cfg");
+        if (f == null) return;
+        try (java.io.InputStream in = new java.io.FileInputStream(f)) {
+            opts.load(in);
+        } catch (Exception ignored) {}
+    }
+
+    public static synchronized boolean getOpt(String key, boolean def) {
+        loadOpts();
+        try {
+            String v = opts.getProperty(key);
+            return v == null ? def : Boolean.parseBoolean(v);
+        } catch (Exception e) {
+            return def;
+        }
+    }
+
+    public static synchronized void setOpt(String key, boolean value) {
+        loadOpts();
+        try {
+            opts.setProperty(key, String.valueOf(value));
+            String f = cfg("itemfinderopts.cfg");
+            if (f == null) return;
+            try (java.io.OutputStream out = new java.io.FileOutputStream(f)) {
+                opts.store(out, "ItemFinder options");
+            }
+        } catch (Exception e) {
+            System.out.println("ItemFinder: save failed for options (" + e + ")");
+        }
+    }
+
     /** Resolve a stored stringID to a displayable InventoryItem (null if unknown). */
     public static necesse.inventory.InventoryItem resolveItem(String stringID) {
         if (stringID == null || stringID.isEmpty()) return null;

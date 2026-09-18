@@ -45,7 +45,7 @@ public class OptionsPanel extends Form {
         addCheck(flow, "optrescan", main.isRescanOnSearch(), main::setRescanOnSearch);
         addCheck(flow, "optautofocus", main.isAutofocus(), main::setAutofocus);
         addCheck(flow, "optenter", main.isEnterDefocus(), main::setEnterDefocus);
-        addCheck(flow, "optdebug", wims2.ModMain.debugLog, v -> wims2.ModMain.debugLog = v);
+        addCheck(flow, "optdebug", wims2.ModMain.debugLog, main::setDebugLog);
 
         FormTextButton keys = new FormTextButton(
             wims2.L.t("openkeys"), 5, flow.next(), getWidth() - 10,

@@ -32,6 +32,8 @@ public class ModMain {
             return;
         }
         System.out.println("ItemFinder: registering control.");
+        // Restore the debug-log option from the saved options file
+        try { debugLog = wims2.WimsData.getOpt("debug", false); } catch (Exception ignored) {}
         // Mod controls are rebindable in Settings > Controls (mod section).
         // Display name + tooltip so players can find and rebind it there.
         openSearchControl = Control.addModControl(new Control(89, "itemfinderopensearch",

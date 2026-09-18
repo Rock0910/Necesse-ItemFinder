@@ -44,21 +44,31 @@ public class SearchForm extends Form {
     private SearchEngine.Snapshot snapshot;
     private int currentRadius = 16;
     /** Toggle: re-scan containers in range on every search (default on). */
-    private boolean rescanOnSearch = true;
+    private boolean rescanOnSearch = wims2.WimsData.getOpt("rescan", true);
     /** Toggle: pressing Enter in the search box drops focus (default on). */
-    private boolean enterDefocus = true;
+    private boolean enterDefocus = wims2.WimsData.getOpt("enterdefocus", true);
     /** Toggle: focus the search box when the window opens (default on). */
-    private boolean autofocus = true;
+    private boolean autofocus = wims2.WimsData.getOpt("autofocus", true);
     /** Set by resnapshot() so it does not scan twice for one action. */
     private boolean skipRescanOnce = false;
 
-    // ---- option accessors (used by the gear panel) ----
+    // ---- option accessors (used by the gear panel; values are persisted) ----
     public boolean isRescanOnSearch() { return rescanOnSearch; }
-    public void setRescanOnSearch(boolean v) { rescanOnSearch = v; }
+    public void setRescanOnSearch(boolean v) {
+        rescanOnSearch = v; wims2.WimsData.setOpt("rescan", v);
+    }
     public boolean isEnterDefocus() { return enterDefocus; }
-    public void setEnterDefocus(boolean v) { enterDefocus = v; }
+    public void setEnterDefocus(boolean v) {
+        enterDefocus = v; wims2.WimsData.setOpt("enterdefocus", v);
+    }
     public boolean isAutofocus() { return autofocus; }
-    public void setAutofocus(boolean v) { autofocus = v; }
+    public void setAutofocus(boolean v) {
+        autofocus = v; wims2.WimsData.setOpt("autofocus", v);
+    }
+    public boolean isDebugLog() { return wims2.ModMain.debugLog; }
+    public void setDebugLog(boolean v) {
+        wims2.ModMain.debugLog = v; wims2.WimsData.setOpt("debug", v);
+    }
     public SidePanel getPanel() { return panel; }
 
     public SearchForm(MainGame mainGame) {
