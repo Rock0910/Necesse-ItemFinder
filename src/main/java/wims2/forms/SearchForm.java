@@ -37,6 +37,7 @@ public class SearchForm extends Form {
     private FormDropdownSelectionButton<Integer> radiusDropdown;
     private FormContentBox resultBox;
     private FormFairTypeLabel statusLabel;
+    private FormFairTypeLabel totalLabel;
 
     private SearchEngine.Snapshot snapshot;
     private int currentRadius = 16;
@@ -142,6 +143,12 @@ public class SearchForm extends Form {
         addComponent(resultBox);
         flow.nextY(resultBox, 5);
 
+        // Total amount of matched items in the searched range
+        totalLabel = new FormFairTypeLabel("", 5, 0);
+        totalLabel.setFontOptions(new FontOptions(16));
+        addComponent(totalLabel);
+        flow.nextY(totalLabel, 5);
+
         // One-line affordance hint above the pager, with live key names
         String tipU = "U", tipP = "P";
         try { tipU = wims2.ModMain.favControl.getKeyName(); } catch (Exception ignored) {}
@@ -175,6 +182,27 @@ public class SearchForm extends Form {
             if (page < totalPages() - 1) { page++; showPage(); }
         });
         flow.nextY(nextBtn, 5);
+
+        // Sort row: 4 buttons, only re-sorts the current results (no re-search)
+        int sortRowY = flow.next();
+        int sbw = (getWidth() - 10 - 15) / 4;
+        FormTextButton distAsc = new FormTextButton(
+            wims2.L.t("sortdistasc"), 5, sortRowY, sbw, FormInputSize.SIZE_32, ButtonColor.BASE);
+        addComponent(distAsc);
+        distAsc.onClicked(e -> { defocusInput(); setSort(0, false); });
+        FormTextButton distDesc = new FormTextButton(
+            wims2.L.t("sortdistdesc"), 10 + sbw, sortRowY, sbw, FormInputSize.SIZE_32, ButtonColor.BASE);
+        addComponent(distDesc);
+        distDesc.onClicked(e -> { defocusInput(); setSort(0, true); });
+        FormTextButton cntAsc = new FormTextButton(
+            wims2.L.t("sortcntasc"), 15 + sbw * 2, sortRowY, sbw, FormInputSize.SIZE_32, ButtonColor.BASE);
+        addComponent(cntAsc);
+        cntAsc.onClicked(e -> { defocusInput(); setSort(1, false); });
+        FormTextButton cntDesc = new FormTextButton(
+            wims2.L.t("sortcntdesc"), 20 + sbw * 3, sortRowY, sbw, FormInputSize.SIZE_32, ButtonColor.BASE);
+        addComponent(cntDesc);
+        cntDesc.onClicked(e -> { defocusInput(); setSort(1, true); });
+        flow.nextY(cntDesc, 5);
 
         setHeight(flow.next() + 5);
         // Draggable by the top strip (title area)
@@ -261,6 +289,7 @@ public class SearchForm extends Form {
             page = 0;
             resultBox.clearComponents();
             rows.clear();
+            updateTotalLabel();
             updateStatus();
             return;
         }
@@ -1224,6 +1253,31 @@ public class SearchForm extends Form {
     private int page;
     private static final int PAGE_SIZE = 4;
 
+    // Sort: 0 = distance (default), 1 = amount. Only re-orders current results.
+    private int sortField = 0;
+    private boolean sortDesc = false;
+
+    private void setSort(int field, boolean desc) {
+        sortField = field;
+        sortDesc = desc;
+        applySort();
+        page = 0;
+        showPage();
+    }
+
+    private void applySort() {
+        try {
+            java.util.Comparator<SearchEngine.Hit> c;
+            if (sortField == 1) {
+                c = (a, b) -> Integer.compare(a.totalAmount, b.totalAmount);
+            } else {
+                c = (a, b) -> Integer.compare(a.distance, b.distance);
+            }
+            if (sortDesc) c = c.reversed();
+            currentHits.sort(c);
+        } catch (Exception ignored) {}
+    }
+
     private int totalPages() {
         return Math.max(1, (currentHits.size() + PAGE_SIZE - 1) / PAGE_SIZE);
     }
@@ -1249,9 +1303,25 @@ public class SearchForm extends Form {
     private void refreshResultBox(List<SearchEngine.Hit> hits) {
         currentHits.clear();
         currentHits.addAll(hits);
+        applySort(); // keep the user's chosen sort across new searches
         page = 0;
         showPage();
+        updateTotalLabel();
         lastDistRefresh = System.currentTimeMillis();
+    }
+
+    /** Sum of matched item amounts across all hits (whole range, not just this page). */
+    private void updateTotalLabel() {
+        try {
+            if (totalLabel == null) return;
+            if (currentHits.isEmpty()) {
+                totalLabel.setText("");
+                return;
+            }
+            long sum = 0;
+            for (SearchEngine.Hit h : currentHits) sum += h.totalAmount;
+            totalLabel.setText(wims2.L.msg("totalitems", "n", String.valueOf(sum)));
+        } catch (Exception ignored) {}
     }
 
     private void showPage() {

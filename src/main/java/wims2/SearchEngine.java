@@ -49,8 +49,8 @@ public class SearchEngine {
 
     /**
      * 快照：一次拿範圍內容器 + 內容物拷貝。
-     * 用 region 範圍查詢（getInRegionRangeByTile），不是全圖 foreach。
-     * 失敗才退回舊式 iterator 全掃。
+     * getInRegionRangeByTile 回傳的是「整個 region」的物件，region 比半徑大，
+     * 所以一定要再自己比對真實距離，否則半徑設定形同無效。
      */
     public static Snapshot snapshot(Client client, int radius) {
         PlayerMob player = client == null ? null : client.getPlayer();
@@ -60,11 +60,16 @@ public class SearchEngine {
         Snapshot snap = new Snapshot(px, py, radius);
         List<?> inRange = null;
         try {
-            // 1.3 TileEntityList 有這個方法：只回範圍內的，不用全圖比座標
             inRange = level.entityManager.objectEntities.getInRegionRangeByTile(px, py, radius);
         } catch (Exception ignored) {}
         if (inRange != null) {
-            for (Object o : inRange) collect(snap, o);
+            for (Object o : inRange) {
+                if (!(o instanceof ObjectEntity)) continue;
+                ObjectEntity oe = (ObjectEntity) o;
+                // Region 查詢只保證在 region 內，這裡才是真正的半徑判斷
+                if (Math.abs(oe.tileX - px) > radius || Math.abs(oe.tileY - py) > radius) continue;
+                collect(snap, o);
+            }
         } else {
             // 舊版相容退路：全圖 iterator + 座標 early-out
             for (Object o : level.entityManager.objectEntities) {
