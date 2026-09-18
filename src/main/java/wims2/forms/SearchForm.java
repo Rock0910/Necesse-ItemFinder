@@ -195,6 +195,12 @@ public class SearchForm extends Form {
         }
         FormFairTypeLabel iconTip = new FormFairTypeLabel(tipText, 5, 0);
         iconTip.setFontOptions(new FontOptions(14));
+        // Wrap instead of overflowing (Chinese/Japanese lines are long).
+        // maxWidth is set BEFORE layout so FormFlow reserves the real height.
+        try {
+            iconTip.setMaxWidth(getWidth() - 10);
+            iconTip.setMaxLines(3, false);
+        } catch (Exception ignored) {}
         addComponent(iconTip);
         flow.nextY(iconTip, 5);
 
@@ -1368,6 +1374,7 @@ public class SearchForm extends Form {
                 dirLabel = new FormFairTypeLabel(dirText(dx0, dy0), x + 2, y + 8);
                 dirLabel.setFontOptions(new FontOptions(14));
                 dirLabel.setMaxWidth(72);
+                try { dirLabel.setMaxLines(1, false); } catch (Exception ignored) {}
                 resultBox.addComponent(dirLabel);
             } catch (Exception ignored) {}
             try {
@@ -1389,6 +1396,7 @@ public class SearchForm extends Form {
                 FormFairTypeLabel label = new FormFairTypeLabel(nameText(h, dx0, dy0), x + 4, y + 2);
                 label.setFontOptions(new FontOptions(14));
                 label.setMaxWidth(boxW - x - 70); // leave room for Ping button
+                try { label.setMaxLines(1, false, true); } catch (Exception ignored) {} // ellipsis, no wrap
                 resultBox.addComponent(label);
                 FormTextButton ping = new FormTextButton(
                     wims2.L.t("ping"), boxW - 58, y + 4, 54, FormInputSize.SIZE_32, ButtonColor.BASE);

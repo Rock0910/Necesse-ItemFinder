@@ -165,6 +165,10 @@ public class SidePanel extends Form {
                     : wims2.L.t("sidefavempty");
                 FormFairTypeLabel empty = new FormFairTypeLabel(msg, 0, y);
                 empty.setFontOptions(new FontOptions(14));
+                try {
+                    empty.setMaxWidth(getWidth() - 15);
+                    empty.setMaxLines(2, false);
+                } catch (Exception ignored) {}
                 box.addComponent(empty);
             } catch (Exception ignored) {}
         }
