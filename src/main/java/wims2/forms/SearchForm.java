@@ -206,11 +206,15 @@ public class SearchForm extends Form {
         addComponent(resultBox);
         flow.nextY(resultBox, 5);
 
-        // Total amount of matched items in the searched range.
-        // Start with placeholder text so FormFlow reserves the right height
-        // (an empty label measures 0 and would overlap the tip line below).
-        totalLabel = new FormFairTypeLabel(wims2.L.msg("totalitems", "n", "0"), 5, 0);
-        totalLabel.setFontOptions(new FontOptions(16));
+        // Info line: range / containers / matched / total items / page.
+        // Placeholder text reserves the right height for FormFlow.
+        totalLabel = new FormFairTypeLabel(wims2.L.msg("info",
+            "r", "16", "c", "0", "h", "0", "n", "0", "p", "1", "t", "1"), 5, 0);
+        totalLabel.setFontOptions(new FontOptions(14));
+        try {
+            totalLabel.setMaxWidth(getWidth() - 10);
+            totalLabel.setMaxLines(1, false, true);
+        } catch (Exception ignored) {}
         addComponent(totalLabel);
         flow.nextY(totalLabel, 5);
 
@@ -1418,13 +1422,20 @@ public class SearchForm extends Form {
         lastDistRefresh = System.currentTimeMillis();
     }
 
-    /** Sum of matched item amounts across all hits (whole range, not just this page). */
+    /** Bottom info line: range, containers, matched, total items, page. */
     private void updateTotalLabel() {
         try {
             if (totalLabel == null) return;
             long sum = 0;
             for (SearchEngine.Hit h : currentHits) sum += h.totalAmount;
-            totalLabel.setText(wims2.L.msg("totalitems", "n", String.valueOf(sum)));
+            int containers = snapshot != null ? snapshot.entries.size() : 0;
+            totalLabel.setText(wims2.L.msg("info",
+                "r", String.valueOf(currentRadius),
+                "c", String.valueOf(containers),
+                "h", String.valueOf(currentHits.size()),
+                "n", String.valueOf(sum),
+                "p", String.valueOf(page + 1),
+                "t", String.valueOf(totalPages())));
         } catch (Exception ignored) {}
     }
 
@@ -1511,6 +1522,7 @@ public class SearchForm extends Form {
             resultBox.addComponent(empty);
         }
         updateStatus();
+        updateTotalLabel(); // page number changes here
         lastDistRefresh = System.currentTimeMillis();
     }
 
