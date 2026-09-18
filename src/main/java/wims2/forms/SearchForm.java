@@ -1560,9 +1560,11 @@ public class SearchForm extends Form {
     }
 
     /**
-     * Jump straight to the game's key binding page (pause menu > Settings >
-     * Controls). Our own window closes automatically because frameTick
-     * detects the pause menu is open.
+     * Jump to the game's key binding page (pause menu > Settings > Controls).
+     * The bindings list is only populated after an input source was chosen
+     * once, so if it is empty we land on the source picker (Keyboard/Mouse,
+     * Controller, ...) which works for both keyboard and gamepad players.
+     * Our window closes automatically because frameTick notices the pause menu.
      */
     private void openKeyBindings() {
         try {
@@ -1571,7 +1573,13 @@ public class SearchForm extends Form {
             pm.setHidden(false);
             try { pm.settings.setHidden(false); } catch (Exception ignored) {}
             try { pm.makeCurrent(pm.settings); } catch (Exception ignored) {}
-            try { pm.settings.makeControlsCurrent(); } catch (Exception ignored) {}
+            boolean hasList = false;
+            try { hasList = readField(pm.settings, "currentControlList") != null; }
+            catch (Exception ignored) {}
+            try {
+                if (hasList) pm.settings.makeControlsCurrent();
+                else pm.settings.makeControlTypeCurrent();
+            } catch (Exception ignored) {}
         } catch (Exception ignored) {}
     }
 
