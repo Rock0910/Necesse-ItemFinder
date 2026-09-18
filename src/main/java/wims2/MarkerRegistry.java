@@ -15,19 +15,18 @@ public class MarkerRegistry {
         if (o == null) return;
         synchronized (live) {
             live.add(o);
-            if (live.size() > 800) {
-                // Forget (don't kill) the oldest; they fade on their own.
-                // Prefer dropping already-dead ones first.
+            // Prune dead ones periodically so we never hold many older
+            // ParticleOption objects (avoids pinning their level refs).
+            if (live.size() > 64) {
                 java.util.Iterator<necesse.entity.particle.ParticleOption> it = live.iterator();
-                while (it.hasNext() && live.size() > 600) {
-                    necesse.entity.particle.ParticleOption old = it.next();
-                    boolean dead = true;
-                    try { dead = old.isRemoved(); } catch (Exception ignored) {}
+                while (it.hasNext()) {
+                    necesse.entity.particle.ParticleOption p = it.next();
+                    boolean dead = false;
+                    try { dead = p.isRemoved(); } catch (Exception ignored) { dead = true; }
                     if (dead) it.remove();
-                    else break;
                 }
-                while (live.size() > 800) live.remove(0);
             }
+            while (live.size() > 400) live.remove(0);
         }
     }
 

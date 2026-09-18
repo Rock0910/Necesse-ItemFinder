@@ -170,15 +170,21 @@ public class SidePanel extends Form {
         }
     }
 
-    /** Pin to the right of the main window, clamped on screen. */
+    private int lastNx = Integer.MIN_VALUE, lastNy = Integer.MIN_VALUE;
+
+    /** Pin to the right of the main window, clamped on screen.
+     * Only moves when the target actually changed (avoids allocating a
+     * position object every frame). */
     public void followMain(GameWindow window) {
         try {
-            MainGame mg = main.getMainGame();
             int mx = main.getX(), my = main.getY(), mw = main.getWidth();
             int winW = window.getWidth(), winH = window.getHeight();
             int nx = mx + mw + 10;
             if (nx + getWidth() > winW) nx = Math.max(0, mx - getWidth() - 10);
             int ny = Math.max(0, Math.min(my, winH - getHeight()));
+            if (nx == lastNx && ny == lastNy && getX() == nx && getY() == ny) return;
+            lastNx = nx;
+            lastNy = ny;
             setPosition(new necesse.gfx.forms.position.FormFixedPosition(nx, ny));
         } catch (Exception ignored) {}
     }

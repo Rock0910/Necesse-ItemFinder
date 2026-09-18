@@ -31,6 +31,8 @@ public class SearchForm extends Form {
     private static SearchForm instance;
     private static long lastFavPress;
     private static long lastFindPress;
+    /** Last level we saw; used to close the window on level change. */
+    private static Object lastLevel;
     private final MainGame mainGame;
     private FormTextInput textInput;
     private FormDropdownSelectionButton<String> categoryDropdown;
@@ -512,54 +514,9 @@ public class SearchForm extends Form {
                 }
             }
             if (target == null || target.item == null) {
-                try {
-                    java.util.ArrayList<Object> dbg = vanillaRoots(fm);
-                    StringBuilder sb = new StringBuilder("ItemFinder: U-fav found nothing, roots=");
-                    sb.append(dbg.size()).append(" [");
-                    for (int i = 0; i < dbg.size(); i++) {
-                        if (i > 0) sb.append(',');
-                        Object r = dbg.get(i);
-                        sb.append(r.getClass().getSimpleName());
-                        // Probe station forms for their settlement manager state
-                        try {
-                            Object mgr = readField(r, "settlementObjectFormManager");
-                            if (mgr != null) {
-                                Object sw = readField(mgr, "switcher");
-                                Object wc = readField(mgr, "workstationConfigForm");
-                                String cur = "?";
-                                try {
-                                    if (sw instanceof necesse.gfx.forms.FormSwitcherTyped) {
-                                        Object c = ((necesse.gfx.forms.FormSwitcherTyped<?>) sw).getCurrent();
-                                        cur = c == null ? "null" : c.getClass().getSimpleName();
-                                    }
-                                } catch (Exception ignored) {}
-                                sb.append("{mgr,sw=").append(cur).append(",cfg=")
-                                    .append(wc == null ? "null" : wc.getClass().getSimpleName())
-                                    .append('}');
-                            }
-                        } catch (Exception ignored) {}
-                        try {
-                            if (r instanceof necesse.gfx.forms.Form) {
-                                necesse.gfx.forms.Form f = (necesse.gfx.forms.Form) r;
-                                sb.append('(').append(f.getX()).append(',').append(f.getY())
-                                    .append(' ').append(f.getWidth()).append('x').append(f.getHeight());
-                                try {
-                                    if (f.isHidden()) sb.append('H');
-                                } catch (Exception ignored) {}
-                                sb.append(')');
-                            }
-                        } catch (Exception ignored) {}
-                    }
-                    sb.append("] hovering=[");
-                    java.util.ArrayList<String> hov = new java.util.ArrayList<>();
-                    for (Object root : dbg) debugHovering(root, hov);
-                    for (int i = 0; i < Math.min(40, hov.size()); i++) {
-                        if (i > 0) sb.append(',');
-                        sb.append(hov.get(i));
-                    }
-                    sb.append(']');
-                    System.out.println(sb.toString());
-                } catch (Exception ignored) {}
+                // Short miss log only (the old deep tree dump was heavy and
+                // is no longer needed now every UI type is handled)
+                try { System.out.println("ItemFinder: U-fav miss"); } catch (Exception ignored) {}
                 return false;
             }
             String sid = null;
@@ -1557,6 +1514,23 @@ public class SearchForm extends Form {
         return ns + ew; // e.g. NE, 右上
     }
 
+    /**
+     * Drop every static/world reference even if the game disposes the form
+     * itself (level change, disconnect, state change) without onCancel().
+     * Prevents the static instance from pinning a disposed form + snapshot
+     * (which references level entities).
+     */
+    @Override
+    public void dispose() {
+        try { RangeOverlay.hide(); } catch (Exception ignored) {}
+        try { TargetMarker.stop(); } catch (Exception ignored) {}
+        try { wims2.MarkerRegistry.clear(); } catch (Exception ignored) {}
+        if (instance == this) instance = null;
+        panel = null;
+        snapshot = null;
+        super.dispose();
+    }
+
     public void onCancel() {
         RangeOverlay.hide();
         TargetMarker.stop();
@@ -1658,6 +1632,15 @@ public class SearchForm extends Form {
     }
 
     public static void frameTick(MainGame mainGame, TickManager tm, GameWindow window) {
+        // Level change / disconnect: the old snapshot holds entity refs from
+        // the previous level, so close the window and let it be collected.
+        try {
+            Object lvl = mainGame.getClient() == null ? null : mainGame.getClient().getLevel();
+            if (instance != null && lastLevel != null && lvl != lastLevel) {
+                instance.onCancel();
+            }
+            lastLevel = lvl;
+        } catch (Exception ignored) {}
         try {
             if (instance != null) {
                 RangeOverlay.tick(mainGame.getClient());
