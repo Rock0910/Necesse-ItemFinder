@@ -20,6 +20,9 @@ public class ModMain {
     public static Control favControl;
     public static Control findControl;
 
+    /** Debug logging toggle (checkbox in the search window; default off). */
+    public static boolean debugLog = false;
+
     public void init() {
     }
 

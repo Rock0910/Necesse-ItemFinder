@@ -116,6 +116,16 @@ public class SearchForm extends Form {
         });
         flow.nextY(rescanBox, 5);
 
+        // Debug log toggle (default off)
+        FormCheckBox debugBox = new FormCheckBox(wims2.L.t("optdebug"), 5, flow.next());
+        addComponent(debugBox);
+        debugBox.checked = wims2.ModMain.debugLog;
+        debugBox.onClicked(e -> {
+            defocusInput();
+            wims2.ModMain.debugLog = debugBox.checked;
+        });
+        flow.nextY(debugBox, 5);
+
         // Category + Range + Reset on the same row
         int dropY = flow.next();
         categoryDropdown = new FormDropdownSelectionButton<String>(5, dropY, FormInputSize.SIZE_32,
@@ -516,7 +526,9 @@ public class SearchForm extends Form {
             if (target == null || target.item == null) {
                 // Short miss log only (the old deep tree dump was heavy and
                 // is no longer needed now every UI type is handled)
-                try { System.out.println("ItemFinder: U-fav miss"); } catch (Exception ignored) {}
+                try {
+                    if (wims2.ModMain.debugLog) System.out.println("ItemFinder: U-fav miss");
+                } catch (Exception ignored) {}
                 return false;
             }
             String sid = null;
@@ -532,7 +544,9 @@ public class SearchForm extends Form {
             } catch (Exception e) {
                 return false;
             }
-            System.out.println("ItemFinder: U-fav " + msg + " [" + sid + "]");
+            if (wims2.ModMain.debugLog) {
+                System.out.println("ItemFinder: U-fav " + msg + " [" + sid + "]");
+            }
             try {
                 if (instance != null) {
                     instance.statusLabel.setText(msg);
@@ -1683,11 +1697,13 @@ public class SearchForm extends Form {
                     try { target = vanillaHoveredItem(mainGame, tm); } catch (Exception ignored) {}
                 }
                 try {
-                    String got = "none";
-                    if (target != null && target.item != null) {
-                        try { got = target.item.getStringID(); } catch (Exception ignored) {}
+                    if (wims2.ModMain.debugLog) {
+                        String got = "none";
+                        if (target != null && target.item != null) {
+                            try { got = target.item.getStringID(); } catch (Exception ignored) {}
+                        }
+                        System.out.println("ItemFinder: P-find got " + got);
                     }
-                    System.out.println("ItemFinder: P-find got " + got);
                 } catch (Exception ignored) {}
                 if (target != null && target.item != null) {
                     String sid = null;

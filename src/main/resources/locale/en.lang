@@ -14,6 +14,7 @@ sortcntasc=Count 1-9
 sortcntdesc=Count 9-1
 totalitems=Total: <n> items
 optrescan=Rescan containers on every search
+optdebug=Debug log
 clearhistory=Clear history
 category=Category
 range=Range

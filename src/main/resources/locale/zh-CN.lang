@@ -14,6 +14,7 @@ sortcntasc=数量 1-9
 sortcntdesc=数量 9-1
 totalitems=总计: <n>个
 optrescan=每次搜索时重新获取容器信息
+optdebug=调试LOG
 clearhistory=清空历史
 category=分类
 range=范围
