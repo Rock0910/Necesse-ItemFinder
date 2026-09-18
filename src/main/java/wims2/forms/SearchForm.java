@@ -205,7 +205,7 @@ public class SearchForm extends Form {
         // maxWidth is set BEFORE layout so FormFlow reserves the real height.
         try {
             iconTip.setMaxWidth(getWidth() - 10);
-            iconTip.setMaxLines(3, false);
+            iconTip.setMaxLines(1, false); // keep the hint on a single line
         } catch (Exception ignored) {}
         addComponent(iconTip);
         flow.nextY(iconTip, 5);
