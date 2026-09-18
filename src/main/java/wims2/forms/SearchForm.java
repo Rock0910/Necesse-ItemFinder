@@ -38,9 +38,14 @@ public class SearchForm extends Form {
     private FormContentBox resultBox;
     private FormFairTypeLabel statusLabel;
     private FormFairTypeLabel totalLabel;
+    private FormCheckBox rescanBox;
 
     private SearchEngine.Snapshot snapshot;
     private int currentRadius = 16;
+    /** Toggle: re-scan containers in range on every search. */
+    private boolean rescanOnSearch = false;
+    /** Set by resnapshot() so it does not scan twice for one action. */
+    private boolean skipRescanOnce = false;
 
     public SearchForm(MainGame mainGame) {
         super("itemfindersearch", 460, 120);
@@ -93,6 +98,16 @@ public class SearchForm extends Form {
         addComponent(clearBtn);
         clearBtn.onClicked(e -> { defocusInput(); clearTextbox(); });
         flow.nextY(textInput, 5);
+
+        // Toggle: re-scan containers in range on every search
+        rescanBox = new FormCheckBox(wims2.L.t("optrescan"), 5, flow.next());
+        addComponent(rescanBox);
+        rescanBox.checked = rescanOnSearch;
+        rescanBox.onClicked(e -> {
+            defocusInput();
+            rescanOnSearch = rescanBox.checked;
+        });
+        flow.nextY(rescanBox, 5);
 
         // Category + Range + Reset on the same row
         int dropY = flow.next();
@@ -266,6 +281,7 @@ public class SearchForm extends Form {
         } catch (Exception ignored) {}
         // true: Scan must flash beacons too, not just Enter/category changes.
         // (Opening the window has no keyword/category yet, so this is a no-op there.)
+        skipRescanOnce = true; // already scanned just above
         applyFilter(true);
     }
 
@@ -295,6 +311,15 @@ public class SearchForm extends Form {
             updateStatus();
             return;
         }
+        // Optional: refresh the container snapshot before each search, so
+        // containers/contents changed since the window opened are picked up.
+        if (rescanOnSearch && !skipRescanOnce) {
+            try {
+                snapshot = SearchEngine.snapshot(mainGame.getClient(), currentRadius);
+                RangeOverlay.show(playerTileX(), playerTileY(), currentRadius);
+            } catch (Exception ignored) {}
+        }
+        skipRescanOnce = false;
         // A real search is always shown in the main (results) list
         List<SearchEngine.Hit> hits = SearchEngine.filter(snapshot, m, spawnParticles);
         statusBaseMsg = wims2.L.msg("statusfound",

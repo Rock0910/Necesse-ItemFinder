@@ -13,6 +13,7 @@ sortdistdesc=距離 9-1
 sortcntasc=數量 1-9
 sortcntdesc=數量 9-1
 totalitems=總計: <n>個
+optrescan=每次搜尋時重新取得容器資訊
 clearhistory=清空歷史
 category=分類
 range=範圍
