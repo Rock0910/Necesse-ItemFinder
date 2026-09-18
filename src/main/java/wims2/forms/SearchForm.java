@@ -189,26 +189,48 @@ public class SearchForm extends Form {
         addComponent(totalLabel);
         flow.nextY(totalLabel, 5);
 
-        // One-line affordance hint above the pager, with live key names
+        // Affordance hint above the pager, with live key names.
+        // Each [segment] is a separate label so brackets never split across
+        // lines; segments wrap between each other when the row is full.
         String tipU = "U", tipP = "P";
         try { tipU = wims2.ModMain.favControl.getKeyName(); } catch (Exception ignored) {}
         try { tipP = wims2.ModMain.findControl.getKeyName(); } catch (Exception ignored) {}
-        String tipText;
+        String[] tipSegs = new String[4];
         try {
-            tipText = wims2.L.msg("tip2", "u", tipU, "p", tipP).translate();
+            tipSegs[0] = wims2.L.t("tipclick");
+            tipSegs[1] = wims2.L.msg("tipfav", "u", tipU).translate();
+            tipSegs[2] = wims2.L.msg("tipfind", "p", tipP).translate();
+            tipSegs[3] = wims2.L.t("tipnote");
         } catch (Exception e) {
-            tipText = "Click icon: search.";
+            tipSegs = new String[] { "[Click: search]", "[U: favorite]", "[P: find hovered]", "rebindable" };
         }
-        FormFairTypeLabel iconTip = new FormFairTypeLabel(tipText, 5, 0);
-        iconTip.setFontOptions(new FontOptions(14));
-        // Wrap instead of overflowing (Chinese/Japanese lines are long).
-        // maxWidth is set BEFORE layout so FormFlow reserves the real height.
-        try {
-            iconTip.setMaxWidth(getWidth() - 10);
-            iconTip.setMaxLines(1, false); // keep the hint on a single line
-        } catch (Exception ignored) {}
-        addComponent(iconTip);
-        flow.nextY(iconTip, 5);
+        int tipY = flow.next();          // top of the hint block
+        int tx = 5, ty = tipY, lineH = 0;
+        int maxX = getWidth() - 5;
+        for (String seg : tipSegs) {
+            if (seg == null) continue;
+            try {
+                FormFairTypeLabel part = new FormFairTypeLabel(seg, tx, ty);
+                part.setFontOptions(new FontOptions(14));
+                try {
+                    part.setMaxWidth(getWidth() - 10);
+                    part.setMaxLines(2, false); // safety if one segment is huge
+                } catch (Exception ignored) {}
+                addComponent(part);
+                java.awt.Rectangle b = part.getBoundingBox();
+                int w = b != null ? b.width : 0;
+                int h = b != null ? b.height : 16;
+                if (tx > 5 && tx + w > maxX) { // wrap before this segment
+                    tx = 5;
+                    ty += lineH + 2;
+                    lineH = 0;
+                    part.setPosition(new FormFixedPosition(tx, ty));
+                }
+                tx += w + 8;
+                lineH = Math.max(lineH, h);
+            } catch (Exception ignored) {}
+        }
+        flow.next(lineH + 5); // reserve the whole hint block height
 
         // Page row: pagination instead of scrolling. Scrolling (wheel or
         // scrollY) proved unreliable here, paging just rebuilds the list.
