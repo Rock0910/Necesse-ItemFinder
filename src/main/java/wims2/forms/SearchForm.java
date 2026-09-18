@@ -42,8 +42,8 @@ public class SearchForm extends Form {
 
     private SearchEngine.Snapshot snapshot;
     private int currentRadius = 16;
-    /** Toggle: re-scan containers in range on every search. */
-    private boolean rescanOnSearch = false;
+    /** Toggle: re-scan containers in range on every search (default on). */
+    private boolean rescanOnSearch = true;
     /** Set by resnapshot() so it does not scan twice for one action. */
     private boolean skipRescanOnce = false;
 
