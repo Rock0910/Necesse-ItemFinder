@@ -143,8 +143,10 @@ public class SearchForm extends Form {
         addComponent(resultBox);
         flow.nextY(resultBox, 5);
 
-        // Total amount of matched items in the searched range
-        totalLabel = new FormFairTypeLabel("", 5, 0);
+        // Total amount of matched items in the searched range.
+        // Start with placeholder text so FormFlow reserves the right height
+        // (an empty label measures 0 and would overlap the tip line below).
+        totalLabel = new FormFairTypeLabel(wims2.L.msg("totalitems", "n", "0"), 5, 0);
         totalLabel.setFontOptions(new FontOptions(16));
         addComponent(totalLabel);
         flow.nextY(totalLabel, 5);
@@ -1314,10 +1316,6 @@ public class SearchForm extends Form {
     private void updateTotalLabel() {
         try {
             if (totalLabel == null) return;
-            if (currentHits.isEmpty()) {
-                totalLabel.setText("");
-                return;
-            }
             long sum = 0;
             for (SearchEngine.Hit h : currentHits) sum += h.totalAmount;
             totalLabel.setText(wims2.L.msg("totalitems", "n", String.valueOf(sum)));
@@ -1355,8 +1353,10 @@ public class SearchForm extends Form {
                 x += 36;
             }
             // Layout: [item][item][item] [dir] [container] name xN (dist) [Ping]
-            int dx0 = h.tileX - snapshot.centerX;
-            int dy0 = h.tileY - snapshot.centerY;
+            // Use the player's CURRENT tile so the first render after a sort
+            // already shows live distances (no jump-back then refresh).
+            int dx0 = h.tileX - playerTileX();
+            int dy0 = h.tileY - playerTileY();
             FormFairTypeLabel dirLabel = null;
             try {
                 dirLabel = new FormFairTypeLabel(dirText(dx0, dy0), x + 2, y + 8);
@@ -1470,11 +1470,31 @@ public class SearchForm extends Form {
     }
 
     /** Live distance: recompute from current player pos while the form is open */
+    /** Player's current tile X (falls back to the snapshot centre). */
+    private int playerTileX() {
+        try {
+            if (mainGame.getClient() != null && mainGame.getClient().getPlayer() != null) {
+                return mainGame.getClient().getPlayer().getTileX();
+            }
+        } catch (Exception ignored) {}
+        return snapshot != null ? snapshot.centerX : 0;
+    }
+
+    /** Player's current tile Y (falls back to the snapshot centre). */
+    private int playerTileY() {
+        try {
+            if (mainGame.getClient() != null && mainGame.getClient().getPlayer() != null) {
+                return mainGame.getClient().getPlayer().getTileY();
+            }
+        } catch (Exception ignored) {}
+        return snapshot != null ? snapshot.centerY : 0;
+    }
+
     private void refreshDistances() {
         if (rows.isEmpty() || mainGame.getClient() == null) return;
         try {
-            int px = mainGame.getClient().getPlayer().getTileX();
-            int py = mainGame.getClient().getPlayer().getTileY();
+            int px = playerTileX();
+            int py = playerTileY();
             for (Row r : rows) {
                 try {
                     int dx = r.hit.tileX - px, dy = r.hit.tileY - py;
