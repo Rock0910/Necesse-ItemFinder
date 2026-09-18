@@ -84,7 +84,8 @@ public class SearchForm extends Form {
         textInput = new FormTextInput(5, inputY, FormInputSize.SIZE_32, 350, 200, 50);
         addComponent(textInput);
         textInput.placeHolder = wims2.L.m("placeholder");
-        textInput.onSubmit(e -> { defocusInput(); applyFilter(true); });
+        // Enter searches but keeps keyboard focus, so you can keep typing
+        textInput.onSubmit(e -> applyFilter(true));
         // Clicking anywhere outside the box drops focus (default is false)
         try { textInput.allowUsedMouseClickStopTyping = true; } catch (Exception ignored) {}
         FormContentIconButton scanBtn = new FormContentIconButton(
