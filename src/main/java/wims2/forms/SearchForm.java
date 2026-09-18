@@ -967,6 +967,13 @@ public class SearchForm extends Form {
     }
 
     private static boolean hoverComp(Object comp) {
+        // Controller focus counts as "hovered" (no mouse on gamepad)
+        try {
+            if (comp instanceof necesse.gfx.forms.components.FormComponent
+                && ((necesse.gfx.forms.components.FormComponent) comp).isControllerFocus()) {
+                return true;
+            }
+        } catch (Exception ignored) {}
         return isHoveringComp(comp) || mouseHoverComp(comp);
     }
 
@@ -1032,7 +1039,7 @@ public class SearchForm extends Form {
                     if (!(recs instanceof java.util.List)) continue;
                     for (Object row : (java.util.List<?>) recs) {
                         if (row == null) continue;
-                        if (!mouseHoverComp(row)) continue;
+                        if (!hoverComp(row)) continue;
                         Object el = readField(row, "element");
                         Object rec = readField(el, "recipe");
                         if (rec instanceof necesse.inventory.recipe.Recipe) {
@@ -1106,18 +1113,29 @@ public class SearchForm extends Form {
                                     if (item != null) return item;
                                 }
                             }
-                        }
-                        return null;
                     }
+                    // no mouse hit: fall through to the hover-flag fallback
+                    // below (also covers controller focus)
                 }
             }
-            // Fallback: hover flags (plain lists)
+            }
+            // Fallback: hover flags (mouse) and isMouseOver (includes
+            // controller focus for grid lists)
             for (Object el : listElements(list)) {
                 if (!(el instanceof necesse.gfx.forms.components.lists.FormListElement)) continue;
                 boolean hov = false;
                 try {
                     hov = ((necesse.gfx.forms.components.lists.FormListElement) el).isHovering();
                 } catch (Exception ignored) {}
+                if (!hov) {
+                    try {
+                        if (el instanceof necesse.gfx.forms.components.lists.FormListGridElement
+                            && list instanceof necesse.gfx.forms.components.lists.FormGeneralGridList) {
+                            hov = ((necesse.gfx.forms.components.lists.FormListGridElement) el)
+                                .isMouseOver((necesse.gfx.forms.components.lists.FormGeneralGridList) list);
+                        }
+                    } catch (Exception ignored) {}
+                }
                 if (!hov) continue;
                 necesse.inventory.InventoryItem item = elementItem(el);
                 if (item != null) return item;
