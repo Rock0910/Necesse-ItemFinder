@@ -46,6 +46,8 @@ public class SearchForm extends Form {
     private int currentRadius = 16;
     /** Toggle: re-scan containers in range on every search (default on). */
     private boolean rescanOnSearch = true;
+    /** Toggle: pressing Enter in the search box drops focus (default on). */
+    private boolean enterDefocus = true;
     /** Set by resnapshot() so it does not scan twice for one action. */
     private boolean skipRescanOnce = false;
 
@@ -86,10 +88,14 @@ public class SearchForm extends Form {
         textInput = new FormTextInput(5, inputY, FormInputSize.SIZE_32, 350, 200, 50);
         addComponent(textInput);
         textInput.placeHolder = wims2.L.m("placeholder");
-        // Enter searches but keeps keyboard focus (preventDefault stops the
-        // textbox from clearing typing state on submit)
+        // Enter searches. Optionally drops keyboard focus (default) or keeps
+        // it (preventDefault stops the textbox clearing its typing state).
         textInput.onSubmit(e -> {
-            e.preventDefault();
+            if (enterDefocus) {
+                defocusInput();
+            } else {
+                e.preventDefault();
+            }
             applyFilter(true);
         });
         // Clicking anywhere outside the box drops focus (default is false)
@@ -131,6 +137,16 @@ public class SearchForm extends Form {
         addComponent(keysBtn);
         keysBtn.onClicked(e -> { defocusInput(); openKeyBindings(); });
         flow.nextY(keysBtn, 5);
+
+        // Enter behaviour: drop focus (default) or keep typing
+        FormCheckBox enterBox = new FormCheckBox(wims2.L.t("optenter"), 5, flow.next());
+        addComponent(enterBox);
+        enterBox.checked = enterDefocus;
+        enterBox.onClicked(e -> {
+            defocusInput();
+            enterDefocus = enterBox.checked;
+        });
+        flow.nextY(enterBox, 5);
 
         // Category + Range + Reset on the same row
         int dropY = flow.next();
