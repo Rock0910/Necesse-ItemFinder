@@ -2,7 +2,7 @@
 
 ![ItemFinder](ItemFinder.png)
 
-Necesse 1.3 的客戶端找物 Mod。
+Necesse 1.3 的客戶端找物 Mod。目前版本 **2.1.0**（[版本紀錄](CHANGELOG.md)）
 
 由 Where Is My Stuff 模組啟發
 使用 Opencode 開發的 Mod
