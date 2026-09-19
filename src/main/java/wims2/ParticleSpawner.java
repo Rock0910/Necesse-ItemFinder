@@ -56,7 +56,7 @@ public class ParticleSpawner {
             try {
                 boolean gold = (i % 2 == 0);
                 MarkerRegistry.track(em.addTopParticle(cx + r.getIntBetween(-6, 6), cy + r.getIntBetween(-4, 4),
-                    Particle.GType.COSMETIC)
+                    Particle.GType.CRITICAL)
                     .sprite(gold
                         ? necesse.gfx.GameResources.starParticles
                         : necesse.gfx.GameResources.sapphireShardParticles)
@@ -77,7 +77,7 @@ public class ParticleSpawner {
             float py = cy + (float) (Math.sin(a) * rTiles * 32);
             try {
                 boolean gold = (i % 2 == 0);
-                MarkerRegistry.track(em.addTopParticle(px, py, Particle.GType.COSMETIC)
+                MarkerRegistry.track(em.addTopParticle(px, py, Particle.GType.CRITICAL)
                     .sprite(gold
                         ? necesse.gfx.GameResources.starParticles
                         : necesse.gfx.GameResources.sapphireShardParticles)
@@ -98,7 +98,7 @@ public class ParticleSpawner {
             Point p = player.getMapPos();
             GameRandom r = GameRandom.globalRandom;
             for (int i = 0; i < 10; i++) {
-                MarkerRegistry.track(em.addTopParticle(p.x + r.getIntBetween(-15, 15), p.y + 10, Particle.GType.COSMETIC)
+                MarkerRegistry.track(em.addTopParticle(p.x + r.getIntBetween(-15, 15), p.y + 10, Particle.GType.CRITICAL)
                     .sprite(necesse.gfx.GameResources.starParticles)
                     .ignoreLight(true)
                     .color(1.0f, 0.2f, 0.2f, 1.0f)
@@ -120,7 +120,7 @@ public class ParticleSpawner {
                 if (added) {
                     boolean gold = (i % 2 == 0);
                     MarkerRegistry.track(level.entityManager.addTopParticle(px, py,
-                        Particle.GType.COSMETIC)
+                        Particle.GType.CRITICAL)
                         .sprite(gold
                             ? necesse.gfx.GameResources.starParticles
                             : necesse.gfx.GameResources.sapphireShardParticles)
@@ -131,7 +131,7 @@ public class ParticleSpawner {
                         .height(24.0f));
                 } else {
                     MarkerRegistry.track(level.entityManager.addTopParticle(px, py,
-                        Particle.GType.COSMETIC)
+                        Particle.GType.CRITICAL)
                         .sprite(necesse.gfx.GameResources.starParticles)
                         .ignoreLight(true)
                         .color(1.0f, 0.3f, 0.3f, 0.9f)

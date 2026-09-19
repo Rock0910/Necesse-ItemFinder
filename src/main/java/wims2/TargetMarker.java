@@ -71,7 +71,7 @@ public class TargetMarker {
                         // (tinting the yellow star blue would multiply dark)
                         boolean gold = (i % 2 == 0);
                         level.entityManager.addTopParticle(px, py,
-                            necesse.entity.particle.Particle.GType.COSMETIC)
+                            necesse.entity.particle.Particle.GType.CRITICAL)
                             .sprite(gold
                                 ? necesse.gfx.GameResources.starParticles
                                 : necesse.gfx.GameResources.sapphireShardParticles)
@@ -88,7 +88,7 @@ public class TargetMarker {
                         boolean gold = (i % 2 == 0);
                         level.entityManager.addTopParticle(
                             cx + (i - 1.5f) * 8, cy - 4,
-                            necesse.entity.particle.Particle.GType.COSMETIC)
+                            necesse.entity.particle.Particle.GType.CRITICAL)
                             .sprite(gold
                                 ? necesse.gfx.GameResources.starParticles
                                 : necesse.gfx.GameResources.sapphireShardParticles)
@@ -115,7 +115,7 @@ public class TargetMarker {
                                 boolean gold = (i % 2 == 0);
                                 level.entityManager.addTopParticle(
                                     sx + dx * f, sy + dy * f,
-                                    necesse.entity.particle.Particle.GType.COSMETIC)
+                                    necesse.entity.particle.Particle.GType.CRITICAL)
                                     .sprite(gold
                                         ? necesse.gfx.GameResources.starParticles
                                         : necesse.gfx.GameResources.sapphireShardParticles)

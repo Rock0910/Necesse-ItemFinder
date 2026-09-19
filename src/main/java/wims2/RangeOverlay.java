@@ -66,7 +66,7 @@ public class RangeOverlay {
             float px = tileX * 32 + 16, py = tileY * 32 + 16;
             if (corner) {
                 level.entityManager.addTopParticle(px, py,
-                    necesse.entity.particle.Particle.GType.COSMETIC)
+                    necesse.entity.particle.Particle.GType.CRITICAL)
                     .sprite(gold
                         ? necesse.gfx.GameResources.starParticles
                         : necesse.gfx.GameResources.sapphireShardParticles)
@@ -77,7 +77,7 @@ public class RangeOverlay {
                     .height(30.0f);
             } else {
                 level.entityManager.addTopParticle(px, py,
-                    necesse.entity.particle.Particle.GType.COSMETIC)
+                    necesse.entity.particle.Particle.GType.CRITICAL)
                     .sprite(gold
                         ? necesse.gfx.GameResources.starParticles
                         : necesse.gfx.GameResources.sapphireShardParticles)
