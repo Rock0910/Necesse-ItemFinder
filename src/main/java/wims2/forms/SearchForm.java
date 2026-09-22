@@ -94,6 +94,8 @@ public class SearchForm extends Form {
         this.mainGame = mainGame;
         // Semi-transparent window background so the game is visible behind it
         try { drawBaseAlpha = opacity / 100f; } catch (Exception ignored) {}
+        // Let children (the contents popup) draw outside the window bounds
+        try { shouldLimitDrawArea = false; } catch (Exception ignored) {}
         FormFlow flow = new FormFlow(5);
 
         // Title + mode icons + close (X) at top-right
@@ -450,6 +452,24 @@ public class SearchForm extends Form {
             int maxX = Math.max(0, getWidth() - popup.getWidth());
             lx = Math.max(0, Math.min(lx, maxX));
             ly = Math.max(0, Math.min(ly, Math.max(0, getHeight() - 20)));
+            // also clamp to the screen, since it may stick out of the window
+            try {
+                java.awt.Point sp = getScreenPosition(true);
+                if (sp != null) {
+                    int sw = 1280, sh = 720;
+                    try {
+                        necesse.engine.window.GameWindow w =
+                            necesse.engine.window.WindowManager.getWindow();
+                        sw = w.getWidth();
+                        sh = w.getHeight();
+                    } catch (Exception ignored) {}
+                    int sx = sp.x + lx, sy = sp.y + ly;
+                    if (sx + popup.getWidth() > sw) lx = Math.max(0, sw - popup.getWidth() - sp.x);
+                    if (sy + popup.getHeight() > sh) ly = Math.max(0, sy - popup.getHeight() - 36 - sp.y);
+                    if (sx < 0) lx = Math.max(0, -sp.x);
+                    if (sy < 0) ly = Math.max(0, -sp.y);
+                }
+            } catch (Exception ignored) {}
             popup.setLocalPosition(lx, ly);
         } catch (Exception ignored) {}
     }
