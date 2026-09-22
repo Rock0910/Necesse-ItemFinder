@@ -436,7 +436,16 @@ public class SearchForm extends Form {
             int ax = 200, ay = 200;
             if (anchor != null) { ax = anchor.x; ay = anchor.y; }
             contentsForm = (ContainerContentsForm) mainGame.formManager.addComponent(
-                new ContainerContentsForm(this, hit.entry.containerName, hit.entry.items, ax, ay));
+                new ContainerContentsForm(this, hit.entry.containerName, hit.entry.items,
+                    ax, ay, hit.tileX, hit.tileY));
+            try { contentsForm.tryPutOnTop(); } catch (Exception ignored) {}
+        } catch (Exception ignored) {}
+    }
+
+    /** Ping a container tile (used by the contents popup). */
+    public void pingTile(int tileX, int tileY) {
+        try {
+            TargetMarker.ping(mainGame.getClient().getLevel(), tileX, tileY);
         } catch (Exception ignored) {}
     }
 

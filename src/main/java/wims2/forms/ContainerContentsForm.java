@@ -29,33 +29,43 @@ public class ContainerContentsForm extends Form {
     private final List<InventoryItem> items = new ArrayList<>();
     private final String title;
     private final int anchorX, anchorY;
+    private final int tileX, tileY;
     private int page;
     private FormContentBox box;
     private FormFairTypeLabel pageLabel;
     private FormTextButton prevBtn, nextBtn;
 
     public ContainerContentsForm(SearchForm main, String title, List<InventoryItem> contents,
-                                 int anchorX, int anchorY) {
+                                 int anchorX, int anchorY, int tileX, int tileY) {
         super("itemfindercontents", 320, 100);
         this.main = main;
         this.anchorX = anchorX;
         this.anchorY = anchorY;
+        this.tileX = tileX;
+        this.tileY = tileY;
         this.title = title == null ? "" : title;
         if (contents != null) items.addAll(contents);
         // Opaque: this is a read-the-contents window, not an overlay
         try { drawBaseAlpha = 1.0f; } catch (Exception ignored) {}
-        // Draw above the side/options panels
-        try { zIndex = 100; } catch (Exception ignored) {}
+        // Draw above every other form
+        try { zIndex = 1000; } catch (Exception ignored) {}
         FormFlow flow = new FormFlow(5);
 
         int ty = flow.next();
         FormFairTypeLabel head = new FormFairTypeLabel(this.title, 5, ty);
         head.setFontOptions(new FontOptions(18));
-        try { head.setMaxWidth(getWidth() - 55); head.setMaxLines(1, false, true); }
+        try { head.setMaxWidth(getWidth() - 95); head.setMaxLines(1, false, true); }
         catch (Exception ignored) {}
         addComponent(head);
         try {
             necesse.gfx.ui.GameInterfaceStyle ui = necesse.engine.Settings.UI;
+            // Ping this container from the popup itself
+            FormTextButton ping = new FormTextButton(
+                wims2.L.t("ping"), getWidth() - 90, ty, 40, FormInputSize.SIZE_32, ButtonColor.BASE);
+            addComponent(ping);
+            ping.onClicked(e -> {
+                try { main.pingTile(tileX, tileY); } catch (Exception ignored) {}
+            });
             FormContentIconButton x = new FormContentIconButton(
                 getWidth() - 46, ty, 36, FormInputSize.SIZE_32, ButtonColor.BASE,
                 ui.button_cross, wims2.L.m("close"));
