@@ -437,8 +437,9 @@ public class SearchForm extends Form {
             hideContents();
             ContainerContentsForm popup = new ContainerContentsForm(
                 this, hit.entry.containerName, hit.entry.items, hit.tileX, hit.tileY);
-            // Child of the main window, so it can never be covered by it
-            addComponent(popup);
+            // Child of the main window, so it can never be covered by it.
+            // NOTE: addComponent(x) resets zIndex to 0, so pass it explicitly.
+            addComponent(popup, 1000);
             contentsForm = popup;
             // local coords = button screen pos - main window screen pos
             int lx = 10, ly = 10;
