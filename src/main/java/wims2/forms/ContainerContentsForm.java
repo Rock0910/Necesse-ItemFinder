@@ -28,17 +28,24 @@ public class ContainerContentsForm extends Form {
     private final SearchForm main;
     private final List<InventoryItem> items = new ArrayList<>();
     private final String title;
+    private final int anchorX, anchorY;
     private int page;
     private FormContentBox box;
     private FormFairTypeLabel pageLabel;
     private FormTextButton prevBtn, nextBtn;
 
-    public ContainerContentsForm(SearchForm main, String title, List<InventoryItem> contents) {
+    public ContainerContentsForm(SearchForm main, String title, List<InventoryItem> contents,
+                                 int anchorX, int anchorY) {
         super("itemfindercontents", 320, 100);
         this.main = main;
+        this.anchorX = anchorX;
+        this.anchorY = anchorY;
         this.title = title == null ? "" : title;
         if (contents != null) items.addAll(contents);
-        try { drawBaseAlpha = main.getOpacityPercent() / 100f; } catch (Exception ignored) {}
+        // Opaque: this is a read-the-contents window, not an overlay
+        try { drawBaseAlpha = 1.0f; } catch (Exception ignored) {}
+        // Draw above the side/options panels
+        try { zIndex = 100; } catch (Exception ignored) {}
         FormFlow flow = new FormFlow(5);
 
         int ty = flow.next();
@@ -85,6 +92,7 @@ public class ContainerContentsForm extends Form {
         flow.nextY(pageLabel, 8);
 
         setHeight(flow.next() + 12);
+        try { followMain(necesse.engine.window.WindowManager.getWindow()); } catch (Exception ignored) {}
         render();
     }
 
@@ -138,15 +146,24 @@ public class ContainerContentsForm extends Form {
         super.dispose();
     }
 
-    /** Keep the popup next to the main window and on screen. */
+    /** Keep the popup just below the button that opened it, on screen. */
     public void followMain(GameWindow window) {
         try {
             int winW = window.getWidth(), winH = window.getHeight();
-            int nx = main.getX() + main.getWidth() + 10;
-            if (nx + getWidth() > winW) nx = Math.max(0, main.getX() - getWidth() - 10);
-            int ny = Math.max(0, Math.min(main.getY(), winH - getHeight()));
+            int nx = anchorX;
+            int ny = anchorY;
+            if (nx + getWidth() > winW) nx = Math.max(0, winW - getWidth());
+            if (ny + getHeight() > winH) ny = Math.max(0, anchorY - getHeight() - 40);
+            nx = Math.max(0, nx);
+            ny = Math.max(0, ny);
+            if (getX() == nx && getY() == ny) return;
             setPosition(new necesse.gfx.forms.position.FormFixedPosition(nx, ny));
         } catch (Exception ignored) {}
+    }
+
+    /** Box holding the icon grid (used for U-favorite hover detection). */
+    public FormContentBox getBox() {
+        return box;
     }
 
     @Override

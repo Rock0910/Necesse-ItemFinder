@@ -426,12 +426,17 @@ public class SearchForm extends Form {
 
     /** "..." on a result row: show everything inside that container. */
     public void openContents(SearchEngine.Hit hit) {
+        openContents(hit, null);
+    }
+
+    public void openContents(SearchEngine.Hit hit, java.awt.Point anchor) {
         try {
             if (hit == null || hit.entry == null) return;
             hideContents();
+            int ax = 200, ay = 200;
+            if (anchor != null) { ax = anchor.x; ay = anchor.y; }
             contentsForm = (ContainerContentsForm) mainGame.formManager.addComponent(
-                new ContainerContentsForm(this, hit.entry.containerName, hit.entry.items));
-            // position is handled every frame by followMain()
+                new ContainerContentsForm(this, hit.entry.containerName, hit.entry.items, ax, ay));
         } catch (Exception ignored) {}
     }
 
@@ -531,6 +536,9 @@ public class SearchForm extends Form {
         try {
             ItemIconButton found = findHoveredIcon(resultBox);
             if (found == null && panel != null) found = findHoveredIcon(panel.getBox());
+            if (found == null && contentsForm != null) {
+                found = findHoveredIcon(contentsForm.getBox());
+            }
             if (found == null || found.getItem() == null || found.getItem().item == null) return false;
             toggleFavItem(found.getItem());
             return true;
@@ -563,6 +571,9 @@ public class SearchForm extends Form {
         try {
             ItemIconButton found = findHoveredIcon(resultBox);
             if (found == null && panel != null) found = findHoveredIcon(panel.getBox());
+            if (found == null && contentsForm != null) {
+                found = findHoveredIcon(contentsForm.getBox());
+            }
             if (found == null || found.getItem() == null || found.getItem().item == null) {
                 return null;
             }
@@ -1518,7 +1529,14 @@ public class SearchForm extends Form {
                     x + 2, y, FormInputSize.SIZE_32, ButtonColor.BASE,
                     necesse.engine.Settings.UI.button_more, wims2.L.m("contents"));
                 resultBox.addComponent(more);
-                more.onClicked(e -> openContents(ch));
+                more.onClicked(e -> {
+                    java.awt.Point anchor = null;
+                    try {
+                        java.awt.Point sp = more.getScreenPosition(true);
+                        if (sp != null) anchor = new java.awt.Point(sp.x, sp.y + 36);
+                    } catch (Exception ignored) {}
+                    openContents(ch, anchor);
+                });
             } catch (Exception ignored) {}
             x += 38;
             FormFairTypeLabel dirLabel = null;
