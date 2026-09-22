@@ -1759,6 +1759,21 @@ public class SearchForm extends Form {
         return ns + ew; // e.g. NE, 右上
     }
 
+    @Override
+    public void handleControllerEvent(necesse.engine.input.controller.ControllerEvent e,
+                                      TickManager tm, necesse.entity.mobs.PlayerMob player) {
+        // Gamepad B / back closes the window (nothing did this by default)
+        try {
+            if (e.getState() == necesse.engine.input.controller.ControllerInput.MENU_BACK
+                && e.buttonState) {
+                e.use();
+                onCancel();
+                return;
+            }
+        } catch (Exception ignored) {}
+        super.handleControllerEvent(e, tm, player);
+    }
+
     /**
      * Drop every static/world reference even if the game disposes the form
      * itself (level change, disconnect, state change) without onCancel().

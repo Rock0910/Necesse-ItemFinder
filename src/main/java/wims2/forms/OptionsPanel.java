@@ -69,8 +69,7 @@ public class OptionsPanel extends Form {
         setHeight(flow.next() + 5);
     }
 
-    private void addCheck(FormFlow flow, String key, boolean initial, Consumer<Boolean> setter) {
-        try {
+    private void addCheck(FormFlow flow, String key, boolean initial, Consumer<Boolean> setter) {        try {
             FormCheckBox box = new FormCheckBox(wims2.L.t(key), 5, flow.next());
             addComponent(box);
             box.checked = initial;
@@ -79,6 +78,21 @@ public class OptionsPanel extends Form {
             });
             flow.nextY(box, 5);
         } catch (Exception ignored) {}
+    }
+
+    @Override
+    public void handleControllerEvent(necesse.engine.input.controller.ControllerEvent e,
+                                      necesse.engine.gameLoop.tickManager.TickManager tm,
+                                      necesse.entity.mobs.PlayerMob player) {
+        try {
+            if (e.getState() == necesse.engine.input.controller.ControllerInput.MENU_BACK
+                && e.buttonState) {
+                e.use();
+                main.hideOptions();
+                return;
+            }
+        } catch (Exception ignored) {}
+        super.handleControllerEvent(e, tm, player);
     }
 
     private int lastNx = Integer.MIN_VALUE, lastNy = Integer.MIN_VALUE;

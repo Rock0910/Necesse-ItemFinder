@@ -91,6 +91,21 @@ public class SidePanel extends Form {
         return panelMode;
     }
 
+    @Override
+    public void handleControllerEvent(necesse.engine.input.controller.ControllerEvent e,
+                                      necesse.engine.gameLoop.tickManager.TickManager tm,
+                                      necesse.entity.mobs.PlayerMob player) {
+        try {
+            if (e.getState() == necesse.engine.input.controller.ControllerInput.MENU_BACK
+                && e.buttonState) {
+                e.use();
+                hidePanel();
+                return;
+            }
+        } catch (Exception ignored) {}
+        super.handleControllerEvent(e, tm, player);
+    }
+
     public void showMode(PanelMode m) {
         panelMode = m;
         page = 0;

@@ -186,6 +186,20 @@ public class ContainerContentsForm extends Form {
         catch (Exception ignored) {}
     }
 
+    @Override
+    public void handleControllerEvent(necesse.engine.input.controller.ControllerEvent e,
+                                      TickManager tm, necesse.entity.mobs.PlayerMob player) {
+        try {
+            if (e.getState() == necesse.engine.input.controller.ControllerInput.MENU_BACK
+                && e.buttonState) {
+                e.use();
+                closeContents();
+                return;
+            }
+        } catch (Exception ignored) {}
+        super.handleControllerEvent(e, tm, player);
+    }
+
     /** Box holding the icon grid (used for U-favorite hover detection). */
     public FormContentBox getBox() {
         return box;
