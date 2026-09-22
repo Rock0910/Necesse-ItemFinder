@@ -378,7 +378,10 @@ public class SearchForm extends Form {
         String catID = "all";
         try { catID = categoryDropdown.getSelected(); } catch (Exception ignored) {}
 
-        ItemMatcher m = keyword.isEmpty() ? null : ItemMatcher.byName(keyword);
+        // Pass the player so the vanilla matcher can resolve/tooltip names
+        necesse.entity.mobs.PlayerMob pm = null;
+        try { pm = mainGame.getClient().getPlayer(); } catch (Exception ignored) {}
+        ItemMatcher m = keyword.isEmpty() ? null : ItemMatcher.byName(keyword, pm);
         if (!"all".equals(catID)) {
             try {
                 ItemCategory cat = ItemCategory.getCategory(catID);

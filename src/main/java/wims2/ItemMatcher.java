@@ -4,14 +4,43 @@ public interface ItemMatcher {
     boolean matches(necesse.inventory.InventoryItem invItem);
 
     /**
-     * Three-track matching, so both languages work no matter the game language:
-     * 1. Current-language display name (e.g. Chinese when playing in Chinese)
-     * 2. English display name via translateDebug(English) (base language, always present)
-     * 3. Internal stringID, e.g. copperbar, bread, healthpotion
-     * 4. Category names incl. sub-categories (any language + ID), e.g. "ore", "礦石"
+     * Matching = vanilla first, then our extra tracks (OR).
+     *
+     * Vanilla (Item.matchesSearch via ItemSearchTester) gives us:
+     *   - "term1|term2" OR syntax
+     *   - "@term" tooltip search (blackboard dependent)
+     *   - item keyWords, global ingredients (anylog/anyfood...), parent categories
+     *
+     * Our extras on top:
+     *   1. Current-language display name
+     *   2. English display name via translateDebug(English)
+     *   3. Internal stringID
+     *   4. Category names incl. sub-categories (any language + ID)
      * Spaces are ignored on both sides, so "copperbar" matches "Copper Bar".
      */
     static ItemMatcher byName(String keyword) {
+        return byName(keyword, null);
+    }
+
+    static ItemMatcher byName(String keyword, necesse.entity.mobs.PlayerMob player) {
+        final ItemMatcher ours = ours(keyword);
+        final necesse.inventory.item.ItemSearchTester vanilla;
+        try {
+            vanilla = necesse.inventory.item.ItemSearchTester.constructSearchTester(keyword);
+        } catch (Exception e) {
+            return ours;
+        }
+        if (vanilla == null) return ours;
+        return invItem -> {
+            try {
+                if (vanilla.matches(invItem, player, null)) return true;
+            } catch (Exception ignored) {}
+            return ours.matches(invItem);
+        };
+    }
+
+    /** The original 4-track matcher. */
+    static ItemMatcher ours(String keyword) {
         String k = keyword.toLowerCase().trim();
         String kFlat = k.replace(" ", "");
         java.util.Set<necesse.inventory.item.ItemCategory> cats = CategorySearch.find(k, kFlat);
