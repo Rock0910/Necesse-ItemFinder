@@ -62,3 +62,4 @@ opttitle=設定
 optautofocus=開いた時に入力欄へフォーカス
 optopacity=透明度 (%)
 pageno=<p>/<t>ページ
+contents=コンテナの中身を表示

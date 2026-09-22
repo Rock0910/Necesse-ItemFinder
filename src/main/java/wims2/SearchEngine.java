@@ -18,6 +18,8 @@ public class SearchEngine {
         public final String objectStringID; // e.g. storagebox: resolves the container's item icon
         public int totalAmount;
         public int distance;
+        /** Container this hit came from (full copied contents for the "..." window). */
+        public Entry entry;
         /** 每種找到的物品各一組，給 UI 畫圖示用（FormItemIcon 需要 InventoryItem） */
         public final java.util.ArrayList<InventoryItem> samples = new java.util.ArrayList<>();
         public Hit(int x, int y, String name, String objectID) {
@@ -147,6 +149,7 @@ public class SearchEngine {
             if (found > 0) {
                 Hit h = new Hit(e.tileX, e.tileY, e.containerName, e.objectStringID);
                 h.totalAmount = found;
+                h.entry = e;
                 h.distance = Math.max(Math.abs(e.tileX - snap.centerX), Math.abs(e.tileY - snap.centerY));
                 h.samples.addAll(sampleById.values());
                 hits.add(h);

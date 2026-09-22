@@ -422,6 +422,38 @@ public class SearchForm extends Form {
 
     private SidePanel panel;
     private OptionsPanel optionsPanel;
+    private ContainerContentsForm contentsForm;
+
+    /** "..." on a result row: show everything inside that container. */
+    public void openContents(SearchEngine.Hit hit) {
+        try {
+            if (hit == null || hit.entry == null) return;
+            hideContents();
+            contentsForm = (ContainerContentsForm) mainGame.formManager.addComponent(
+                new ContainerContentsForm(this, hit.entry.containerName, hit.entry.items));
+            // position is handled every frame by followMain()
+        } catch (Exception ignored) {}
+    }
+
+    public void hideContents() {
+        try {
+            if (contentsForm != null && mainGame.formManager != null) {
+                mainGame.formManager.removeComponent(contentsForm);
+                try { contentsForm.dispose(); } catch (Exception ignored) {}
+            }
+        } catch (Exception ignored) {}
+        contentsForm = null;
+    }
+
+    /** Called from the popup's dispose so we never hold a dead form. */
+    public void onContentsDisposed(ContainerContentsForm f) {
+        if (contentsForm == f) contentsForm = null;
+    }
+
+    /** Same as searchExact but callable from the popup. */
+    public void searchExactPublic(necesse.inventory.InventoryItem sample) {
+        searchExact(sample);
+    }
 
     /** Gear: toggle the options panel. */
     public void toggleOptions() {
@@ -1476,16 +1508,24 @@ public class SearchForm extends Form {
                 } catch (Exception ignored) {}
                 x += 36;
             }
-            // Layout: [item][item][item] [dir] [container] name xN (dist) [Ping]
-            // Use the player's CURRENT tile so the first render after a sort
-            // already shows live distances (no jump-back then refresh).
+            // Layout: [item][item][item] [...] [dir] [container] name xN [Ping]
             int dx0 = h.tileX - playerTileX();
             int dy0 = h.tileY - playerTileY();
+            // "..." button: open a window with every item in this container
+            try {
+                final SearchEngine.Hit ch = h;
+                FormContentIconButton more = new FormContentIconButton(
+                    x + 2, y, FormInputSize.SIZE_32, ButtonColor.BASE,
+                    necesse.engine.Settings.UI.button_more, wims2.L.m("contents"));
+                resultBox.addComponent(more);
+                more.onClicked(e -> openContents(ch));
+            } catch (Exception ignored) {}
+            x += 38;
             FormFairTypeLabel dirLabel = null;
             try {
                 dirLabel = new FormFairTypeLabel(dirText(dx0, dy0), x + 2, y + 8);
                 dirLabel.setFontOptions(new FontOptions(14));
-                dirLabel.setMaxWidth(72);
+                dirLabel.setMaxWidth(66);
                 try { dirLabel.setMaxLines(1, false); } catch (Exception ignored) {}
                 resultBox.addComponent(dirLabel);
             } catch (Exception ignored) {}
@@ -1493,17 +1533,17 @@ public class SearchForm extends Form {
                 final SearchEngine.Hit ch = h;
                 necesse.inventory.InventoryItem cItem = containerItem(h.objectStringID);
                 if (cItem != null) {
-                    ItemIconButton cb = new ItemIconButton(x + 76, y, FormInputSize.SIZE_32,
+                    ItemIconButton cb = new ItemIconButton(x + 72, y, FormInputSize.SIZE_32,
                         ButtonColor.BASE, cItem,
                         necesse.engine.Settings.UI.button_search_24,
                         wims2.L.m("ping"));
                     resultBox.addComponent(cb);
                     cb.onClicked(e -> pingHit(ch));
                 } else {
-                    resultBox.addComponent(new IconSpacer(x + 76, y));
+                    resultBox.addComponent(new IconSpacer(x + 72, y));
                 }
             } catch (Exception ignored) {}
-            x += 114;
+            x += 108;
             try {
                 FormFairTypeLabel label = new FormFairTypeLabel(nameText(h, dx0, dy0), x + 4, y + 2);
                 label.setFontOptions(new FontOptions(14));
@@ -1673,6 +1713,7 @@ public class SearchForm extends Form {
         if (instance == this) instance = null;
         panel = null;
         optionsPanel = null;
+        contentsForm = null;
         snapshot = null;
         super.dispose();
     }
@@ -1710,6 +1751,7 @@ public class SearchForm extends Form {
         } catch (Exception ignored) {}
         hidePanel();
         hideOptions();
+        hideContents();
         savePos();
         try { wims2.MarkerRegistry.clear(); } catch (Exception ignored) {}
         if (mainGame.formManager != null) mainGame.formManager.removeComponent(this);
@@ -1819,6 +1861,7 @@ public class SearchForm extends Form {
                 instance.clampToScreen(window);
                 if (instance.panel != null) instance.panel.followMain(window);
                 if (instance.optionsPanel != null) instance.optionsPanel.followMain(window);
+                if (instance.contentsForm != null) instance.contentsForm.followMain(window);
                 // Live distance refresh, twice a second
                 if (System.currentTimeMillis() - instance.lastDistRefresh > 500) {
                     instance.lastDistRefresh = System.currentTimeMillis();
