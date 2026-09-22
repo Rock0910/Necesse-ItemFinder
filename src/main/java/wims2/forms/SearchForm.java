@@ -94,8 +94,6 @@ public class SearchForm extends Form {
         this.mainGame = mainGame;
         // Semi-transparent window background so the game is visible behind it
         try { drawBaseAlpha = opacity / 100f; } catch (Exception ignored) {}
-        // Let children (the contents popup) draw outside the window bounds
-        try { shouldLimitDrawArea = false; } catch (Exception ignored) {}
         FormFlow flow = new FormFlow(5);
 
         // Title + mode icons + close (X) at top-right
@@ -437,41 +435,16 @@ public class SearchForm extends Form {
             hideContents();
             ContainerContentsForm popup = new ContainerContentsForm(
                 this, hit.entry.containerName, hit.entry.items, hit.tileX, hit.tileY);
-            // Child of the main window, so it can never be covered by it.
-            // NOTE: addComponent(x) resets zIndex to 0, so pass it explicitly.
-            addComponent(popup, 1000);
-            contentsForm = popup;
-            // local coords = button screen pos - main window screen pos
-            int lx = 10, ly = 10;
+            if (anchor != null) popup.setAnchor(anchor.x, anchor.y);
+            // Top-level form with an explicit zIndex (addComponent(x) would
+            // reset it to 0). Input is iterated highest-zIndex first, and draw
+            // order is lowest first, so 1000 = on top and gets clicks first.
+            contentsForm = (ContainerContentsForm) mainGame.formManager
+                .addComponent(popup, 1000);
             try {
-                if (anchor != null) {
-                    java.awt.Point sp = getScreenPosition(true);
-                    if (sp != null) { lx = anchor.x - sp.x; ly = anchor.y - sp.y; }
-                }
+                necesse.engine.window.GameWindow w = necesse.engine.window.WindowManager.getWindow();
+                contentsForm.followMain(w);
             } catch (Exception ignored) {}
-            // keep it inside the window horizontally, and below the button
-            int maxX = Math.max(0, getWidth() - popup.getWidth());
-            lx = Math.max(0, Math.min(lx, maxX));
-            ly = Math.max(0, Math.min(ly, Math.max(0, getHeight() - 20)));
-            // also clamp to the screen, since it may stick out of the window
-            try {
-                java.awt.Point sp = getScreenPosition(true);
-                if (sp != null) {
-                    int sw = 1280, sh = 720;
-                    try {
-                        necesse.engine.window.GameWindow w =
-                            necesse.engine.window.WindowManager.getWindow();
-                        sw = w.getWidth();
-                        sh = w.getHeight();
-                    } catch (Exception ignored) {}
-                    int sx = sp.x + lx, sy = sp.y + ly;
-                    if (sx + popup.getWidth() > sw) lx = Math.max(0, sw - popup.getWidth() - sp.x);
-                    if (sy + popup.getHeight() > sh) ly = Math.max(0, sy - popup.getHeight() - 36 - sp.y);
-                    if (sx < 0) lx = Math.max(0, -sp.x);
-                    if (sy < 0) ly = Math.max(0, -sp.y);
-                }
-            } catch (Exception ignored) {}
-            popup.setLocalPosition(lx, ly);
         } catch (Exception ignored) {}
     }
 
@@ -484,8 +457,8 @@ public class SearchForm extends Form {
 
     public void hideContents() {
         try {
-            if (contentsForm != null) {
-                try { removeComponent(contentsForm); } catch (Exception ignored) {}
+            if (contentsForm != null && mainGame.formManager != null) {
+                mainGame.formManager.removeComponent(contentsForm);
                 try { contentsForm.dispose(); } catch (Exception ignored) {}
             }
         } catch (Exception ignored) {}
@@ -1936,7 +1909,10 @@ public class SearchForm extends Form {
                 instance.clampToScreen(window);
                 if (instance.panel != null) instance.panel.followMain(window);
                 if (instance.optionsPanel != null) instance.optionsPanel.followMain(window);
-                if (instance.contentsForm != null) instance.contentsForm.tick();
+                if (instance.contentsForm != null) {
+                    instance.contentsForm.tick();
+                    instance.contentsForm.followMain(window);
+                }
                 // Live distance refresh, twice a second
                 if (System.currentTimeMillis() - instance.lastDistRefresh > 500) {
                     instance.lastDistRefresh = System.currentTimeMillis();

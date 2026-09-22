@@ -22,13 +22,14 @@ import java.util.List;
  */
 public class ContainerContentsForm extends Form {
 
-    private static final int COLS = 8;
-    private static final int PAGE_SIZE = 32;
+    private static final int COLS = 10;
+    private static final int PAGE_SIZE = 50; // 10 x 5 per page
 
     private final SearchForm main;
     private final List<InventoryItem> items = new ArrayList<>();
     private final String title;
     private final int tileX, tileY;
+    private int anchorX = 200, anchorY = 200;
     private int page;
     private FormContentBox box;
     private FormFairTypeLabel pageLabel;
@@ -41,7 +42,7 @@ public class ContainerContentsForm extends Form {
 
     public ContainerContentsForm(SearchForm main, String title, List<InventoryItem> contents,
                                  int tileX, int tileY) {
-        super("itemfindercontents", 320, 100);
+        super("itemfindercontents", 380, 100);
         this.main = main;
         this.tileX = tileX;
         this.tileY = tileY;
@@ -76,7 +77,7 @@ public class ContainerContentsForm extends Form {
         } catch (Exception ignored) {}
         flow.nextY(head, 16);
 
-        box = new FormContentBox(5, 0, getWidth() - 10, 150);
+        box = new FormContentBox(5, 0, getWidth() - 10, 180); // 5 rows of 36px
         box.alwaysShowVerticalScrollBar = false;
         addComponent(box);
         flow.nextY(box, 5);
@@ -180,10 +181,25 @@ public class ContainerContentsForm extends Form {
         } catch (Exception ignored) {}
     }
 
-    /** Position in the parent form's local coordinates. */
-    public void setLocalPosition(int x, int y) {
-        try { setPosition(new necesse.gfx.forms.position.FormFixedPosition(x, y)); }
-        catch (Exception ignored) {}
+    /** Screen position of the button that opened this popup. */
+    public void setAnchor(int x, int y) {
+        anchorX = x;
+        anchorY = y;
+    }
+
+    /** Stay just below the button, clamped to the screen. */
+    public void followMain(GameWindow window) {
+        try {
+            int winW = window.getWidth(), winH = window.getHeight();
+            int nx = anchorX;
+            int ny = anchorY;
+            if (nx + getWidth() > winW) nx = Math.max(0, winW - getWidth());
+            if (ny + getHeight() > winH) ny = Math.max(0, anchorY - getHeight() - 40);
+            nx = Math.max(0, nx);
+            ny = Math.max(0, ny);
+            if (getX() == nx && getY() == ny) return;
+            setPosition(new necesse.gfx.forms.position.FormFixedPosition(nx, ny));
+        } catch (Exception ignored) {}
     }
 
     @Override
