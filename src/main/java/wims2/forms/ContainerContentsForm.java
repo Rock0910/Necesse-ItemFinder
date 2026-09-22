@@ -28,26 +28,27 @@ public class ContainerContentsForm extends Form {
     private final SearchForm main;
     private final List<InventoryItem> items = new ArrayList<>();
     private final String title;
-    private final int anchorX, anchorY;
     private final int tileX, tileY;
     private int page;
     private FormContentBox box;
     private FormFairTypeLabel pageLabel;
     private FormTextButton prevBtn, nextBtn;
+    // Ping fade: become semi-transparent, then fade back to opaque
+    private boolean fading;
+    private long fadeStart;
+    private float fadeFrom = 1f;
+    private static final long FADE_MS = 3000;
 
     public ContainerContentsForm(SearchForm main, String title, List<InventoryItem> contents,
-                                 int anchorX, int anchorY, int tileX, int tileY) {
+                                 int tileX, int tileY) {
         super("itemfindercontents", 320, 100);
         this.main = main;
-        this.anchorX = anchorX;
-        this.anchorY = anchorY;
         this.tileX = tileX;
         this.tileY = tileY;
         this.title = title == null ? "" : title;
         if (contents != null) items.addAll(contents);
-        // Opaque: this is a read-the-contents window, not an overlay
+        // Opaque by default; only Ping makes it see-through briefly
         try { drawBaseAlpha = 1.0f; } catch (Exception ignored) {}
-        // Draw above every other form
         try { zIndex = 1000; } catch (Exception ignored) {}
         FormFlow flow = new FormFlow(5);
 
@@ -65,6 +66,7 @@ public class ContainerContentsForm extends Form {
             addComponent(ping);
             ping.onClicked(e -> {
                 try { main.pingTile(tileX, tileY); } catch (Exception ignored) {}
+                startPingFade();
             });
             FormContentIconButton x = new FormContentIconButton(
                 getWidth() - 46, ty, 36, FormInputSize.SIZE_32, ButtonColor.BASE,
@@ -102,7 +104,6 @@ public class ContainerContentsForm extends Form {
         flow.nextY(pageLabel, 8);
 
         setHeight(flow.next() + 12);
-        try { followMain(necesse.engine.window.WindowManager.getWindow()); } catch (Exception ignored) {}
         render();
     }
 
@@ -156,28 +157,37 @@ public class ContainerContentsForm extends Form {
         super.dispose();
     }
 
-    /** Keep the popup just below the button that opened it, on screen. */
-    public void followMain(GameWindow window) {
+    /** Ping fade: drop to the main window's opacity, then fade back over 3s. */
+    private void startPingFade() {
+        try { fadeFrom = Math.max(0.15f, main.getOpacityPercent() / 100f); }
+        catch (Exception ignored) { fadeFrom = 0.45f; }
+        try { drawBaseAlpha = fadeFrom; } catch (Exception ignored) {}
+        fadeStart = System.currentTimeMillis();
+        fading = true;
+    }
+
+    /** Called every frame while the popup is open. */
+    public void tick() {
+        if (!fading) return;
         try {
-            int winW = window.getWidth(), winH = window.getHeight();
-            int nx = anchorX;
-            int ny = anchorY;
-            if (nx + getWidth() > winW) nx = Math.max(0, winW - getWidth());
-            if (ny + getHeight() > winH) ny = Math.max(0, anchorY - getHeight() - 40);
-            nx = Math.max(0, nx);
-            ny = Math.max(0, ny);
-            if (getX() == nx && getY() == ny) return;
-            setPosition(new necesse.gfx.forms.position.FormFixedPosition(nx, ny));
+            float t = (System.currentTimeMillis() - fadeStart) / (float) FADE_MS;
+            if (t >= 1f) {
+                fading = false;
+                drawBaseAlpha = 1f;
+                return;
+            }
+            drawBaseAlpha = fadeFrom + (1f - fadeFrom) * t;
         } catch (Exception ignored) {}
+    }
+
+    /** Position in the parent form's local coordinates. */
+    public void setLocalPosition(int x, int y) {
+        try { setPosition(new necesse.gfx.forms.position.FormFixedPosition(x, y)); }
+        catch (Exception ignored) {}
     }
 
     /** Box holding the icon grid (used for U-favorite hover detection). */
     public FormContentBox getBox() {
         return box;
-    }
-
-    @Override
-    public void draw(TickManager tm, necesse.entity.mobs.PlayerMob player, java.awt.Rectangle r) {
-        super.draw(tm, player, r);
     }
 }

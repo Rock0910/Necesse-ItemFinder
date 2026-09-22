@@ -433,12 +433,24 @@ public class SearchForm extends Form {
         try {
             if (hit == null || hit.entry == null) return;
             hideContents();
-            int ax = 200, ay = 200;
-            if (anchor != null) { ax = anchor.x; ay = anchor.y; }
-            contentsForm = (ContainerContentsForm) mainGame.formManager.addComponent(
-                new ContainerContentsForm(this, hit.entry.containerName, hit.entry.items,
-                    ax, ay, hit.tileX, hit.tileY));
-            try { contentsForm.tryPutOnTop(); } catch (Exception ignored) {}
+            ContainerContentsForm popup = new ContainerContentsForm(
+                this, hit.entry.containerName, hit.entry.items, hit.tileX, hit.tileY);
+            // Child of the main window, so it can never be covered by it
+            addComponent(popup);
+            contentsForm = popup;
+            // local coords = button screen pos - main window screen pos
+            int lx = 10, ly = 10;
+            try {
+                if (anchor != null) {
+                    java.awt.Point sp = getScreenPosition(true);
+                    if (sp != null) { lx = anchor.x - sp.x; ly = anchor.y - sp.y; }
+                }
+            } catch (Exception ignored) {}
+            // keep it inside the window horizontally, and below the button
+            int maxX = Math.max(0, getWidth() - popup.getWidth());
+            lx = Math.max(0, Math.min(lx, maxX));
+            ly = Math.max(0, Math.min(ly, Math.max(0, getHeight() - 20)));
+            popup.setLocalPosition(lx, ly);
         } catch (Exception ignored) {}
     }
 
@@ -451,8 +463,8 @@ public class SearchForm extends Form {
 
     public void hideContents() {
         try {
-            if (contentsForm != null && mainGame.formManager != null) {
-                mainGame.formManager.removeComponent(contentsForm);
+            if (contentsForm != null) {
+                try { removeComponent(contentsForm); } catch (Exception ignored) {}
                 try { contentsForm.dispose(); } catch (Exception ignored) {}
             }
         } catch (Exception ignored) {}
@@ -1888,7 +1900,7 @@ public class SearchForm extends Form {
                 instance.clampToScreen(window);
                 if (instance.panel != null) instance.panel.followMain(window);
                 if (instance.optionsPanel != null) instance.optionsPanel.followMain(window);
-                if (instance.contentsForm != null) instance.contentsForm.followMain(window);
+                if (instance.contentsForm != null) instance.contentsForm.tick();
                 // Live distance refresh, twice a second
                 if (System.currentTimeMillis() - instance.lastDistRefresh > 500) {
                     instance.lastDistRefresh = System.currentTimeMillis();
